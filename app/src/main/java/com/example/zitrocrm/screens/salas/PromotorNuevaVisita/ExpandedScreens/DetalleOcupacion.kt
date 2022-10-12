@@ -286,8 +286,7 @@ fun AlertDetalleOcupacion(
     tipo: MutableState<Boolean>,
     paqueteria_familia: SnapshotStateList<String>,
 ) {
-    val datastore = SharedPrefence(LocalContext.current)
-    val token = datastore.getToken().toString()
+    val context = LocalContext.current
     when (alert.value) {
         "Horarios" -> {
             AlertDialog(
@@ -457,10 +456,10 @@ fun AlertDetalleOcupacion(
                                         proveedor_info[2] = item.tipo.toString()
                                         if (tipo.value || tipo.value == false && item.id == 24) {
                                             viewModel.getLibreriaCompetencia(
-                                                token = token,
                                                 tipo = item.tipo!!.toInt(),
                                                 proveedorid = item.id!!,
-                                                clasificacion = item.tipo!!.toInt()
+                                                clasificacion = item.tipo!!.toInt(),
+                                                context = context
                                             )
                                         }
                                         alert.value = ""

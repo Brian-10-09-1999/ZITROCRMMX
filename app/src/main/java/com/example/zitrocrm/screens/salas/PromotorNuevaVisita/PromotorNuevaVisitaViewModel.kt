@@ -2,7 +2,6 @@ package com.example.zitrocrm.screens.salas.PromotorNuevaVisita
 
 import android.content.Context
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
@@ -15,6 +14,7 @@ import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.JuegosFilter.Ju
 import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.ObjSemanalFilter.Message
 import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.ProveedorFilter.Rows
 import com.example.zitrocrm.network.repository.RetrofitHelper
+import com.example.zitrocrm.repository.SharedPrefence
 import com.example.zitrocrm.screens.login.components.alertdialog
 import com.example.zitrocrm.screens.salas.PromotorNuevaVisita.components.*
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -81,7 +81,7 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
 
     //---------------------------------------ACUMULADOS BINGO--------------------------------------------------//
     fun addAcumulados(
-        proveedorInfo: MutableState<Rows>,
+        proveedor_info: SnapshotStateList<String>,
         inicio: MutableState<String>,
         fin: MutableState<String>,
         evento: MutableState<String>,
@@ -101,8 +101,8 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         acumulados.add(
             Acumulados(
                 proveedor = ID(
-                    id = proveedorInfo.value.id!!.toInt(),
-                    nombre = proveedorInfo.value.nombre.toString()
+                    id = proveedor_info[1].toInt(),
+                    nombre = proveedor_info[0]
                 ),
                 inicio = inicio.value.toInt(),
                 fin = fin.value.toInt(),
@@ -112,9 +112,9 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                 premio = premi
             )
         )
-        proveedorInfo.value.id = 0
-        proveedorInfo.value.nombre = ""
-        proveedorInfo.value.tipo = 0
+        a()
+        proveedor_info[1] = "0"
+        proveedor_info[0] = ""
         inicio.value = ""
         fin.value = ""
         evento.value = ""
@@ -122,15 +122,46 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         hora_fin.value = ""
         premio.value = ""
         diferencia.value = ""
-        a()
     }
     fun removeAcumulados(item: Acumulados) {
         visitaPromotor.value!!.acumulados.remove(item)
         a()
     }
-
     //--------------------------------------LO MAS JUGADO ZITRO Y COMPETENCIA----------------------------------------//
-
+    fun addZitroyComp(
+        unidadOcupacion: MutableState<String>,
+        apuestas_promedio: MutableState<String>,
+        producto_paqueteria: SnapshotStateList<String>,
+        proveedor_info: SnapshotStateList<String>,
+        tiro_minimo: MutableState<String>,
+        tiro_maximo: MutableState<String>,
+        tiro_promedio: MutableState<String>,
+        array_zona: SnapshotStateList<Zona>,
+        isRotated: MutableState<Boolean>,
+        array_mas_jugado: ArrayList<MasJugado>,
+        progresivos: MutableList<Progresivos>,
+    ) {
+        val ocupa : Int
+        if(unidadOcupacion.value=="Hr") ocupa = promedio_ocupacion.value.toInt()*60
+        else ocupa = promedio_ocupacion.value.toInt()
+        //viewModel.addLoMasJugadoZitroComp()
+        array_mas_jugado.add(
+            MasJugado(
+                apuestasPromedio = apuestas_promedio.value,
+                juego = ID(id=producto_paqueteria[1].toInt(),nombre=producto_paqueteria[0]),
+                progresivos = ArrayList(progresivos),
+                promedioOcupacion = ocupa,
+                proveedor = Rows(id = proveedor_info[1].toInt(), nombre = proveedor_info[0], tipo = proveedor_info[2].toInt()),
+                tiroMinimo = tiro_minimo.value.toInt(),
+                tiroMaximo = tiro_maximo.value.toInt(),
+                tiroPromedio = tiro_promedio.value.toInt(),
+                zona = ArrayList(array_zona),
+                unidadOcupacion = unidadOcupacion.value.toString()
+            )
+        )
+        a()
+        isRotated.value = !isRotated.value
+    }
 
 
 
@@ -138,8 +169,8 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
 
     val sap2 = mutableStateOf(false)
     val lap2 = mutableStateOf(false)
-    val fumar2 = mutableStateOf(false)
-    val nofumar2 = mutableStateOf(false)
+    val zona_fumar = mutableStateOf(false)
+    val zona_nofumar = mutableStateOf(false)
     var positivo = mutableStateOf(true)
     var negativo = mutableStateOf(false)
     var positivo2 = mutableStateOf(true)
@@ -162,8 +193,6 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
     /**LO MAS JUGADO ZITRO Y COMPETENCIA**/
     var id_proveedor_lo_mas_jugado = mutableStateOf(0)
     var proveedor_lo_mas_jugado = mutableStateOf("")
-    var producto_mas_jugado = mutableStateOf("")
-    var id_producto_mas_jugado = mutableStateOf(0)
     var tiro_minimo = mutableStateOf("")
     var tiro_maximo = mutableStateOf("")
     var tiro_promedio = mutableStateOf("")
@@ -358,14 +387,15 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
     }
 
     //Service api que nos devuelve las librerias
-    fun getLibreriaCompetencia(token: String, tipo: Int, proveedorid: Int, clasificacion: Int) {
+    fun getLibreriaCompetencia(tipo: Int, proveedorid: Int, clasificacion: Int,context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
+            val token = SharedPrefence(context).getToken()
             val authService = RetrofitHelper.getAuthService()
             try {
                 alertdialog(1, "")
                 if (proveedorid == 24) {
                     val responseService = authService.getJuegosZitro(
-                        token = token,
+                        token = token.toString(),
                         tipo = tipo,
                         clasificacion = clasificacion
                     )
@@ -383,7 +413,7 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                     }
                 } else {
                     val responseService = authService.getSalasLibrerias(
-                        token = token,
+                        token = token.toString(),
                         tipo = tipo,
                         proveedorid = proveedorid
                     )
@@ -417,56 +447,10 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         }
     }
 
-    /**ACUMULADOS BINGO**/
-    fun getResta(a: String, b: String): Int {
-        var A = ""
-        var B = ""
-        if (getValidationSum(a)) A = a
-        if (getValidationSum(b)) B = b
-        if (A == "") A = "0"
-        if (B == "") B = "0"
-        return B.toInt() - A.toInt()
-    }
-    /**LO MAS JUGADO ZITRO COMPETENCIA**/
-    fun checksZonaId() {
-        if (fumar2.value) {
-            addZonaId(1, "Fumar")
-        }
-        if (nofumar2.value) {
-            addZonaId(2, "No fumar")
-        }
-        if (sap2.value) {
-            addSapLap(1, "Sap")
-        }
-        if (lap2.value) {
-            addSapLap(2, "Lap")
-        }
-    }
-
-    fun addZonaId(zonaid: Int, zona: String) {
-        Zonaid.filter { it.id == zonaid.toString() }.forEach {
-            Zonaid.remove(Zona(id = zonaid.toString(), zona = zona))
-        }
-        Zonaid.add(Zona(zonaid.toString(), zona))
-    }
-
-    fun addSapLap(id: Int, progresivos: String) {
-        Progresivos.filter { it.id == id.toString() }.forEach {
-            Progresivos.remove(Progresivos(id = id.toString(), progresivos = progresivos))
-        }
-        Progresivos.add(Progresivos(id.toString(), progresivos))
-    }
-
     fun selectProveedorLoMasJugado(id: Int, nombre: String) {
         alertProveedorLoMasJugado.value = false
         proveedor_lo_mas_jugado.value = nombre
         id_proveedor_lo_mas_jugado.value = id
-    }
-
-    fun selectJuegoMasJugado(id: Int, nombre: String) {
-        alertJuegosFilter.value = false
-        producto_mas_jugado.value = nombre
-        id_producto_mas_jugado.value = id
     }
 
     fun addLoMasJugadoZitroComp() {
@@ -505,10 +489,10 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                 Zonaid.clear()
                 Progresivos.clear()
                 proveedor_lo_mas_jugado.value = ""
-                producto_mas_jugado.value = ""
-                id_producto_mas_jugado.value = 0
-                fumar2.value = false
-                nofumar2.value = false
+                //producto_mas_jugado.value = ""
+                //id_producto_mas_jugado.value = 0
+                zona_fumar.value = false
+                zona_nofumar.value = false
                 sap2.value = false
                 lap2.value = false
             } catch (e: Exception) {

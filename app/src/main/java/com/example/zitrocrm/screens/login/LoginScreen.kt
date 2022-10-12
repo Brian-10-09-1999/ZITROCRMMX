@@ -35,28 +35,25 @@ import com.example.zitrocrm.ui.theme.white
 fun LoginScreen(
     onclickLogin: (user: String, pwd: String, context: Context) -> Unit,
     imageError: Boolean,
-    loginViewModel : LoginViewModel
-)
-{   val context = LocalContext.current
+    loginViewModel: LoginViewModel
+) {
+    val context = LocalContext.current
     val datastore = SharedPrefence(LocalContext.current)
     val user_shp = datastore.getUserLogin().toString()
     val psw_shp = datastore.getPassLogin().toString()
     var pwd by rememberSaveable { mutableStateOf(value = "") }
     var user by rememberSaveable { mutableStateOf(value = "") }
-    val isValidate by derivedStateOf { user.isNotBlank() && pwd.isNotBlank() }
-    val focusManager = LocalFocusManager.current
-    val ctxt = LocalContext.current
-    if(datastore.getInicioLogin().toString()=="true"){
+    if (datastore.getInicioLogin().toString() == "true") {
         loginViewModel.checkInicio.value = true
-        loginViewModel.login(user_shp,psw_shp,context)
+        loginViewModel.login(user_shp, psw_shp, context)
     }
     BoxWithConstraints {
         val padding =
-            if(maxWidth<360.dp){
+            if (maxWidth < 360.dp) {
                 0.dp
-            }else if(maxWidth<600.dp){
+            } else if (maxWidth < 600.dp) {
                 20.dp
-            }else{
+            } else {
                 60.dp
             }
 
@@ -67,105 +64,103 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
                 contentScale = ContentScale.Crop
             )
-            Box(modifier = Modifier
-                .padding(0.dp, 55.dp, 0.dp, 0.dp)
-                .fillMaxSize()
-            ){
+            Column() {
                 Image(
                     painter = painterResource(R.drawable.crm_logo),
                     contentDescription = null,
                     modifier = Modifier
-                        .size(200.dp)
-                        .align(Alignment.TopCenter),
+                        .fillMaxSize(.35f)
+                        .align(CenterHorizontally),
                     contentScale = ContentScale.Fit
                 )
-            }
-
-            Box(modifier = Modifier.padding(0.dp,280.dp,0.dp,50.dp))
-            {
-                Spacer(
-                    Modifier
-                        .matchParentSize()
-                        .background(color = blacktransp)
-                )
-
-                var usuariox by rememberSaveable { mutableStateOf(value = "") }
-                var passx by rememberSaveable { mutableStateOf(value = "") }
-                val isValidate by derivedStateOf { usuariox.isNotBlank() && passx.isNotBlank() }
-                val focusManager = LocalFocusManager.current
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 30.dp, vertical = 10.dp),
-
-                    ) {
-                    Spacer(Modifier.fillMaxHeight(.1f))
-                    Text(
-                        text = "Iniciar Sesión",
-                        color = Color.White,
-                        fontSize = 25.sp,
-                        modifier = Modifier.align(Alignment.CenterHorizontally),
-                        style = MaterialTheme.typography.subtitle2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Spacer(Modifier.fillMaxHeight(.1f))
-
-                    EmailOutTextField(
-                        textValue = usuariox,
-                        onValueChange = { usuariox = it },
-                        onClickButton = { usuariox = "" },
-                        onNext = { focusManager.moveFocus(FocusDirection.Down)
-                        }
-                    )
-
-                    Spacer(Modifier.fillMaxHeight(.1f))
-
-                    PasswordOutTextField(
-                        textValue = passx,
-                        onValueChange = { passx = it },
-                        onDone = {
-                            focusManager.clearFocus()
-                        }
-                    )
-                    Spacer(Modifier.fillMaxHeight(.02f))
-                    val ctxt = LocalContext.current
-                    Row(
+                Box(modifier = Modifier)
+                {
+                    Spacer(
                         Modifier
-                            .padding(vertical = 0.dp)
-                            .align(Alignment.End)) {
-                        Text(text = "Guardar Inicio de Sesión",
-                            modifier =
-                            Modifier
-                                .padding(
-                                    horizontal = 3.dp
-                                )
-                                .align(Alignment.CenterVertically),
-                            fontSize = 13.sp,
-                            textAlign = TextAlign.Start,
-                        )
-                        Checkbox(
-                            checked = loginViewModel.checkInicio.value ,
-                            onCheckedChange = {
-                                loginViewModel.checkInicio.value = it
-                            },
-                            colors = CheckboxDefaults.colors(
-                                checkedColor = colorResource(R.color.reds),
-                                uncheckedColor = colorResource(R.color.blackdark),
-                                checkmarkColor = colorResource(R.color.white)
-                            )
-                        )
-                    }
-                    Spacer(Modifier.fillMaxHeight(.02f))
-
-                    ButtonLogin(
-                        onclick = {onclickLogin(usuariox,passx,ctxt)},
-                        enabled = isValidate
+                            .matchParentSize()
+                            .background(color = blacktransp)
                     )
-                    Spacer(Modifier.fillMaxHeight(.1f))
+                    var usuariox by rememberSaveable { mutableStateOf(value = "") }
+                    var passx by rememberSaveable { mutableStateOf(value = "") }
+                    val isValidate by derivedStateOf { usuariox.isNotBlank() && passx.isNotBlank() }
+                    val focusManager = LocalFocusManager.current
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 30.dp, vertical = 10.dp)
+                            .background(color = blacktransp),
+                    ) {
+                        Spacer(Modifier.fillMaxHeight(.1f))
+                        Text(
+                            text = "Iniciar Sesión",
+                            color = Color.White,
+                            fontSize = 25.sp,
+                            modifier = Modifier.align(CenterHorizontally),
+                            style = MaterialTheme.typography.subtitle2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Spacer(Modifier.fillMaxHeight(.1f))
+
+                        EmailOutTextField(
+                            textValue = usuariox,
+                            onValueChange = { usuariox = it },
+                            onClickButton = { usuariox = "" },
+                            onNext = {
+                                focusManager.moveFocus(FocusDirection.Down)
+                            }
+                        )
+
+                        Spacer(Modifier.fillMaxHeight(.1f))
+
+                        PasswordOutTextField(
+                            textValue = passx,
+                            onValueChange = { passx = it },
+                            onDone = {
+                                focusManager.clearFocus()
+                            }
+                        )
+                        Spacer(Modifier.fillMaxHeight(.02f))
+                        val ctxt = LocalContext.current
+                        Row(
+                            Modifier
+                                .padding(vertical = 0.dp)
+                                .align(Alignment.End)
+                        ) {
+                            Text(
+                                text = "Guardar Inicio de Sesión",
+                                modifier =
+                                Modifier
+                                    .padding(
+                                        horizontal = 3.dp
+                                    )
+                                    .align(Alignment.CenterVertically),
+                                fontSize = 13.sp,
+                                textAlign = TextAlign.Start,
+                            )
+                            Checkbox(
+                                checked = loginViewModel.checkInicio.value,
+                                onCheckedChange = {
+                                    loginViewModel.checkInicio.value = it
+                                },
+                                colors = CheckboxDefaults.colors(
+                                    checkedColor = colorResource(R.color.reds),
+                                    uncheckedColor = colorResource(R.color.blackdark),
+                                    checkmarkColor = colorResource(R.color.white)
+                                )
+                            )
+                        }
+                        Spacer(Modifier.fillMaxHeight(.02f))
+
+                        ButtonLogin(
+                            onclick = { onclickLogin(usuariox, passx, ctxt) },
+                            enabled = isValidate
+                        )
+                        Spacer(Modifier.fillMaxHeight(.1f))
+                    }
                 }
+                ErrorImageAuth(isImageValidate = imageError)
             }
-            ErrorImageAuth(isImageValidate = imageError)
         }
     }
 }

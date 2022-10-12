@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
@@ -144,9 +145,7 @@ fun AcumuladosBingoExpand(
         val premio = remember { mutableStateOf("") }
         val alert_proveedor = remember { mutableStateOf(false) }
         val proveedor_info = remember { mutableStateListOf("", "0", "0") }
-        val proveedor = remember{
-            mutableStateOf(Rows(id=0,nombre="",tipo = 0))
-        }
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -201,7 +200,7 @@ fun AcumuladosBingoExpand(
             val focusManager = LocalFocusManager.current
             OutlinedTextField(
                 enabled = false,
-                value = proveedor.value.nombre.toString(),
+                value = proveedor_info[0],
                 onValueChange = {},
                 keyboardOptions = KeyboardOptions.Default.copy(
                     keyboardType = KeyboardType.Ascii,
@@ -217,7 +216,7 @@ fun AcumuladosBingoExpand(
                         alert_proveedor.value = true
                     },
                 label = {
-                    if (proveedor.value.nombre!!.isBlank()) {
+                    if (proveedor_info[0].isBlank()) {
                         Text("Selecciona el Proveedor")
                     } else {
                         Text("Proveedor")
@@ -433,8 +432,8 @@ fun AcumuladosBingoExpand(
                 ),
             )
             val isValidate by derivedStateOf {
-                proveedor.value.nombre!!.isNotBlank()
-                        && proveedor.value.id!!.toInt() > 0
+                proveedor_info[0].isNotBlank()
+                        && proveedor_info[1].toInt() > 0
                         && inicio.value.isNotBlank()
                         && fin.value.isNotBlank()
             }
@@ -443,8 +442,8 @@ fun AcumuladosBingoExpand(
                         && hora_inicio.value.isNotBlank()
                         && hora_fin.value.isNotBlank()
                         && premio.value.isNotBlank()
-                        && proveedor.value.nombre!!.isNotBlank()
-                        && proveedor.value.id!!.toInt() > 0
+                        && proveedor_info[0].isNotBlank()
+                        && proveedor_info[1].toInt() > 0
             }
             val isValidate3 by derivedStateOf {
                 evento.value.isNotBlank()
@@ -462,7 +461,7 @@ fun AcumuladosBingoExpand(
                 enabled = if (isValidate3) isValidate2 else isValidate,
                 onClick = {
                     viewModel.addAcumulados(
-                        proveedorInfo = proveedor,
+                        proveedor_info = proveedor_info,
                         inicio = inicio,
                         fin = fin,
                         evento = evento,
@@ -496,7 +495,8 @@ fun AcumuladosBingoExpand(
             AlertProveedorSeleccionado(
                 list_proveedor = viewModel.proveedores_selections,
                 alert_proveedor = alert_proveedor,
-                proveedor_info = proveedor
+                proveedor_info = proveedor_info,
+                onclick = {}
             )
         }
     }
@@ -644,7 +644,8 @@ fun dataItemAcumulado(
 fun AlertProveedorSeleccionado(
     list_proveedor: MutableList<Rows>,
     alert_proveedor: MutableState<Boolean>,
-    proveedor_info: MutableState<Rows>,
+    proveedor_info: SnapshotStateList<String>,
+    onclick : () ->Unit,
 ) {
     if (alert_proveedor.value) {
         AlertDialog(
@@ -682,9 +683,10 @@ fun AlertProveedorSeleccionado(
                             Column(modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    proveedor_info.value.nombre = label.nombre.toString()
-                                    proveedor_info.value.id = label.id
-                                    proveedor_info.value.tipo = label.tipo
+                                    proveedor_info[0] = label.nombre.toString()
+                                    proveedor_info[1] = label.id.toString()
+                                    proveedor_info[2] = label.tipo.toString()
+                                    onclick.invoke()
                                     alert_proveedor.value = false
                                 }
                                 .padding(horizontal = 20.dp, vertical = 10.dp)) {

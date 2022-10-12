@@ -319,12 +319,13 @@ fun ContentNuevaVisita(
                     onCardArrowClick = { viewModelNV.cardsexp(4) },
                     expanded = cards[4],
                     viewModelNV = viewModelNV,
-                    list_mas_jugado = mas_jugado
+                    list_mas_jugado = mas_jugado,
+                    tipo = tipo
                 )
             }
             if(cards[4]&&mas_jugado.isNotEmpty()){
                 itemsIndexed(mas_jugado){index,item->
-
+                    dataItemMasjugado(item)
                 }
             }
             //COMENTARIOS GENERALES JUGADORES
