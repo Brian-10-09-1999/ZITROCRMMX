@@ -274,7 +274,7 @@ fun ContentNuevaVisita(
             }
             if (cards[1] && viewModelNV.listdetalleOcu.isNotEmpty()) {
                 item {
-                    itemsTittle("Proveedores seleccionados.")
+                    ItemsTittle("Proveedores seleccionados.")
                 }
                 //-----ARRAY OCUPACION-----//
                 itemsIndexed(viewModelNV.listdetalleOcu) { index, item ->
@@ -299,7 +299,7 @@ fun ContentNuevaVisita(
                 }
                 if (cards[3] && acumulados.isNotEmpty()) {
                     item {
-                        itemsTittle("Acumulados Bingo Generados")
+                        ItemsTittle("Acumulados Bingo Generados")
                     }
                     //-----ARRAY ACUMULADOS-----//
                     itemsIndexed(acumulados) { index, item ->
@@ -324,8 +324,12 @@ fun ContentNuevaVisita(
                 )
             }
             if(cards[4]&&mas_jugado.isNotEmpty()){
+                item {
+                    ItemsTittle("Lo Más Jugado Generados")
+                }
+                //-----ARRAY MAS JUGADO-----//
                 itemsIndexed(mas_jugado){index,item->
-                    dataItemMasjugado(item)
+                    DataItemMasjugado(item)
                 }
             }
             //COMENTARIOS GENERALES JUGADORES
@@ -369,7 +373,7 @@ fun ContentNuevaVisita(
                         && visita.fecha!!.year!! > 0
                         && viewModelNV.dataProvedorOcupacion.isNotEmpty()
                         && viewModelNV.dataProvedorOcupacionSlots.isNotEmpty()
-                        && viewModelNV.dataLoMasJugadoZitroZomp.isNotEmpty()
+                        //&& viewModelNV.dataLoMasJugadoZitroZomp.isNotEmpty()
                         && viewModelNV.addSonido.isNotEmpty()
                         && viewModelNV.dataComentariosGeneralesJugadores.isNotEmpty()
             }
@@ -512,7 +516,7 @@ fun AlertEnvio(
 }
 
 @Composable
-fun itemsTittle(string: String) {
+fun ItemsTittle(string: String) {
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(10.dp))

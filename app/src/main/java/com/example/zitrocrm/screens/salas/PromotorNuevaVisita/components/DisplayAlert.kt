@@ -87,10 +87,10 @@ fun DisplayAlert(
                                 .fillMaxWidth()
                                 .clickable {
                                     //navController.popBackStack()
-                                    viewModel.selectProveedorLoMasJugado(
+                                    /*viewModel.selectProveedorLoMasJugado(
                                         id = label.id!!,
                                         nombre = label.nombre!!,
-                                    )
+                                    )*/
                                 }
                                 .padding(horizontal = 20.dp, vertical = 10.dp)) {
                                 Text(text = label.nombre.toString())

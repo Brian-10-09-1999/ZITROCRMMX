@@ -4,5 +4,5 @@ import com.google.gson.annotations.SerializedName
 
 data class SubJuegos(
     @SerializedName("ok"      ) var ok      : Boolean?           = null,
-    @SerializedName("rows"    ) var juegos :  ArrayList<SubJuegosArray> = arrayListOf()
+    @SerializedName("rows"    ) var rows :  ArrayList<SubJuegosArray> = arrayListOf()
 )

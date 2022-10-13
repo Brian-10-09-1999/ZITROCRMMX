@@ -456,6 +456,7 @@ fun AlertDetalleOcupacion(
                                         proveedor_info[2] = item.tipo.toString()
                                         if (tipo.value || tipo.value == false && item.id == 24) {
                                             viewModel.getLibreriaCompetencia(
+                                                juegos = true,
                                                 tipo = item.tipo!!.toInt(),
                                                 proveedorid = item.id!!,
                                                 clasificacion = item.tipo!!.toInt(),

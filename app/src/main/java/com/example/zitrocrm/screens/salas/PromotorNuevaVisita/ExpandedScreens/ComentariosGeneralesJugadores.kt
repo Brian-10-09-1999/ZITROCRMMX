@@ -3,7 +3,6 @@ package com.example.zitrocrm.screens.salas.PromotorNuevaVisita.ExpandedScreens
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -40,12 +39,10 @@ import androidx.navigation.NavController
 import com.example.zitrocrm.R
 import com.example.zitrocrm.navigation.Destination
 import com.example.zitrocrm.network.models_dto.DetalleOcupacionDto.Proveedor
-import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.SampleData
 import com.example.zitrocrm.screens.salas.*
 import com.example.zitrocrm.screens.salas.PromotorNuevaVisita.PromotorNuevaVisitaViewModel
 import com.example.zitrocrm.screens.salas.PromotorNuevaVisita.components.alertJuegosComentariosJugadores
 import com.example.zitrocrm.ui.theme.blackdark
-import com.example.zitrocrm.utils.Val_Constants
 
 @ExperimentalAnimationApi
 @SuppressLint("UnusedTransitionTargetStateParameter")
@@ -55,21 +52,10 @@ fun ComentariosGeneralesJugadores(
     onCardArrowClick: () -> Unit,
     expanded: Boolean,
     viewModelPromotorNuevaVisita: PromotorNuevaVisitaViewModel,
-    navController : NavController
+    navController: NavController
 ) {
-    val transitionState = remember { MutableTransitionState(expanded).apply {
-        targetState = !expanded
-    }}
-    val transition = updateTransition(targetState = transitionState, label = "transition")
-    val cardElevation by transition.animateDp({
-        tween(durationMillis = Val_Constants.ExpandAnimation)
-    }, label = "elevationTransition") {
-        if (expanded) 20.dp else 5.dp
-    }
-
     Card(
         backgroundColor = blackdark,
-        elevation = cardElevation,
         shape = RoundedCornerShape(15.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -88,10 +74,13 @@ fun ComentariosGeneralesJugadores(
                     Column(
                         modifier = Modifier
                             .weight(0.15f)
-                            .align(Alignment.CenterVertically)){
-                        Image(painter = painterResource(id = R.drawable.comentarios),
-                            contentDescription ="IconList",
-                            modifier = Modifier.padding(start = 10.dp))
+                            .align(Alignment.CenterVertically)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.comentarios),
+                            contentDescription = "IconList",
+                            modifier = Modifier.padding(start = 10.dp)
+                        )
                     }
                     Column(
                         modifier = Modifier.weight(1f)
@@ -122,7 +111,11 @@ fun ComentariosGeneralesJugadores(
                     }
                 }
             }
-            ComentariosGeneralesJugadoresExpand(expanded, viewModelPromotorNuevaVisita, navController)
+            ComentariosGeneralesJugadoresExpand(
+                expanded,
+                viewModelPromotorNuevaVisita,
+                navController
+            )
         }
     }
 }
@@ -131,8 +124,8 @@ fun ComentariosGeneralesJugadores(
 @Composable
 fun ComentariosGeneralesJugadoresExpand(
     expanded: Boolean = true,
-    viewModelPromotorNuevaVisita : PromotorNuevaVisitaViewModel,
-    navController : NavController
+    viewModel: PromotorNuevaVisitaViewModel,
+    navController: NavController
 ) {
     AnimatedVisibility(
         visible = expanded,
@@ -147,10 +140,13 @@ fun ComentariosGeneralesJugadoresExpand(
         ) {
             Box(
                 Modifier
-                    .fillMaxSize()) {
-                Column(modifier = Modifier
                     .fillMaxSize()
-                    .padding(10.dp)) {
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(10.dp)
+                ) {
                     var perfilexpanded by remember { mutableStateOf(false) }
                     val perfil = listOf(
                         Proveedor(id = 1, nombre = "Alto"),
@@ -159,13 +155,24 @@ fun ComentariosGeneralesJugadoresExpand(
                     )
                     var perfilselectedText by remember { mutableStateOf("") }
                     var textfieldSize by remember { mutableStateOf(Size.Zero) }
-                    val icon =
-                        if (expanded)
-                            Icons.Filled.KeyboardArrowUp
-                        else
-                            Icons.Filled.KeyboardArrowDown
+                    val icon = if (expanded) Icons.Filled.KeyboardArrowUp else  Icons.Filled.KeyboardArrowDown
                     val focusManager = LocalFocusManager.current
-                    Text(text = "Calificacion",
+
+                    //-----------------------------------------------------------------------------//
+                    val alert_proveedor = remember { mutableStateOf(false) }
+                    val proveedor_info = remember { mutableStateListOf("", "0","0") }
+                    var positivo = remember {mutableStateOf(true)}
+                    var negativo = remember { mutableStateOf(false)}
+                    AlertProveedorSeleccionado(
+                        list_proveedor = viewModel.proveedores_selections,
+                        alert_proveedor = alert_proveedor,
+                        proveedor_info = proveedor_info,
+                        onclick = {}
+                    )
+                    //-----------------------------------------------------------------------------//
+
+                    Text(
+                        text = "Calificacion",
                         fontStyle = FontStyle.Normal,
                         modifier = Modifier.align(Alignment.Start),
                         style = MaterialTheme.typography.subtitle2,
@@ -196,17 +203,18 @@ fun ComentariosGeneralesJugadoresExpand(
                                 modifier = Modifier
                                     .padding(start = 5.dp)
                                     .align(Alignment.CenterVertically),
-                                checked = viewModelPromotorNuevaVisita.positivo.value,
+                                checked = viewModel.positivo.value,
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = colorResource(R.color.reds),
                                     uncheckedColor = colorResource(R.color.graydark),
                                     checkmarkColor = colorResource(R.color.white)
                                 ),
                                 onCheckedChange = {
-                                    viewModelPromotorNuevaVisita.positivo.value = it
+                                    viewModel.positivo.value = it
                                     if (it) {
-                                        viewModelPromotorNuevaVisita.negativo.value=false
-                                        viewModelPromotorNuevaVisita.calificacion_comentarios.value = true
+                                        viewModel.negativo.value = false
+                                        viewModel.calificacion_comentarios.value =
+                                            true
                                     }
                                 }
                             )
@@ -234,17 +242,18 @@ fun ComentariosGeneralesJugadoresExpand(
                                 modifier = Modifier
                                     .padding(start = 5.dp)
                                     .align(Alignment.CenterVertically),
-                                checked = viewModelPromotorNuevaVisita.negativo.value,
+                                checked = viewModel.negativo.value,
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = colorResource(R.color.reds),
                                     uncheckedColor = colorResource(R.color.graydark),
                                     checkmarkColor = colorResource(R.color.white)
                                 ),
                                 onCheckedChange = {
-                                    viewModelPromotorNuevaVisita.negativo.value = it
+                                    viewModel.negativo.value = it
                                     if (it) {
-                                        viewModelPromotorNuevaVisita.positivo.value=false
-                                        viewModelPromotorNuevaVisita.calificacion_comentarios.value = false
+                                        viewModel.positivo.value = false
+                                        viewModel.calificacion_comentarios.value =
+                                            false
                                     }
                                 }
                             )
@@ -253,7 +262,7 @@ fun ComentariosGeneralesJugadoresExpand(
                     Spacer(Modifier.height(10.dp))
                     OutlinedTextField(
                         enabled = false,
-                        value = viewModelPromotorNuevaVisita.juego_comentarios.value,
+                        value = viewModel.juego_comentarios.value,
                         onValueChange = {},
                         keyboardOptions = KeyboardOptions.Default.copy(
                             keyboardType = KeyboardType.Ascii,
@@ -274,10 +283,11 @@ fun ComentariosGeneralesJugadoresExpand(
                             },
                         label = { Text("Juegos") },
                         trailingIcon = {
-                            Icon(icon,"contentDescription",
+                            Icon(icon, "contentDescription",
                                 Modifier.clickable {
                                     alertJuegosComentariosJugadores.value = true
-                                    navController.navigate(route = Destination.Dialog.route) }
+                                    navController.navigate(route = Destination.Dialog.route)
+                                }
                             )
                         }
                     )
@@ -285,7 +295,7 @@ fun ComentariosGeneralesJugadoresExpand(
                     Spacer(Modifier.height(10.dp))
                     OutlinedTextField(
                         enabled = false,
-                        value = viewModelPromotorNuevaVisita.perfil_comentarios.value,
+                        value = viewModel.perfil_comentarios.value,
                         onValueChange = { perfilselectedText },
                         keyboardOptions = KeyboardOptions.Default.copy(
                             keyboardType = KeyboardType.Ascii,
@@ -304,7 +314,7 @@ fun ComentariosGeneralesJugadoresExpand(
                             },
                         label = { Text("Perfil") },
                         trailingIcon = {
-                            Icon(icon,"contentDescription",
+                            Icon(icon, "contentDescription",
                                 Modifier.clickable { perfilexpanded = !perfilexpanded })
                         }
                     )
@@ -312,12 +322,13 @@ fun ComentariosGeneralesJugadoresExpand(
                         expanded = perfilexpanded,
                         onDismissRequest = { perfilexpanded = false },
                         modifier = Modifier
-                            .width(with(LocalDensity.current){textfieldSize.width.toDp()})
+                            .width(with(LocalDensity.current) { textfieldSize.width.toDp() })
                     ) {
                         perfil.forEach { label ->
                             DropdownMenuItem(onClick = {
-                                viewModelPromotorNuevaVisita.perfil_comentarios.value = label.nombre.toString()
-                                viewModelPromotorNuevaVisita.id_perfil.value = label.id!!.toInt()
+                                viewModel.perfil_comentarios.value =
+                                    label.nombre.toString()
+                                viewModel.id_perfil.value = label.id!!.toInt()
                                 perfilexpanded = false
                             }) {
                                 Text(text = label.nombre.toString())
@@ -326,13 +337,16 @@ fun ComentariosGeneralesJugadoresExpand(
                     }
                     Spacer(Modifier.height(10.dp))
                     OutlinedTextField(
-                        value = viewModelPromotorNuevaVisita.procedencia_comentarios.value,
-                        onValueChange = {  viewModelPromotorNuevaVisita.procedencia_comentarios.value = it },
+                        value = viewModel.procedencia_comentarios.value,
+                        onValueChange = {
+                            viewModel.procedencia_comentarios.value = it
+                        },
                         label = { Text("Procedencia") },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions.Default.copy(
                             keyboardType = KeyboardType.Text,
-                            imeAction = ImeAction.Next),
+                            imeAction = ImeAction.Next
+                        ),
                         keyboardActions = KeyboardActions(
                             onNext = { focusManager.moveFocus(FocusDirection.Down) }
                         ),
@@ -345,8 +359,10 @@ fun ComentariosGeneralesJugadoresExpand(
                     )
                     Spacer(Modifier.height(10.dp))
                     OutlinedTextField(
-                        value =  viewModelPromotorNuevaVisita.ingresos_comentarios.value,
-                        onValueChange = {  viewModelPromotorNuevaVisita.ingresos_comentarios.value = it },
+                        value = viewModel.ingresos_comentarios.value,
+                        onValueChange = {
+                            viewModel.ingresos_comentarios.value = it
+                        },
                         label = { Text("Ingresos") },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions.Default.copy(
@@ -365,14 +381,16 @@ fun ComentariosGeneralesJugadoresExpand(
                     )
                     Spacer(Modifier.height(10.dp))
                     OutlinedTextField(
-                        value =  viewModelPromotorNuevaVisita.comentarios_jugadores.value,
-                        onValueChange = { viewModelPromotorNuevaVisita.comentarios_jugadores.value = it
-                                        },
+                        value = viewModel.comentarios_jugadores.value,
+                        onValueChange = {
+                            viewModel.comentarios_jugadores.value = it
+                        },
                         label = { Text("Comentarios") },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions.Default.copy(
                             keyboardType = KeyboardType.Text,
-                            imeAction = ImeAction.Done),
+                            imeAction = ImeAction.Done
+                        ),
                         keyboardActions = KeyboardActions(
                             onDone = { focusManager.clearFocus() }
                         ),
@@ -385,18 +403,17 @@ fun ComentariosGeneralesJugadoresExpand(
                     )
                     Spacer(Modifier.height(10.dp))
                     val isValidate by derivedStateOf {
-                        viewModelPromotorNuevaVisita.juego_comentarios.value.isNotBlank()
-                                && viewModelPromotorNuevaVisita.perfil_comentarios.value.isNotBlank()
-                                && viewModelPromotorNuevaVisita.procedencia_comentarios.value.isNotBlank()
-                                && viewModelPromotorNuevaVisita.ingresos_comentarios.value.isNotBlank()
-                                && viewModelPromotorNuevaVisita.comentarios_jugadores.value.isNotBlank()
+                        viewModel.juego_comentarios.value.isNotBlank()
+                                && viewModel.perfil_comentarios.value.isNotBlank()
+                                && viewModel.procedencia_comentarios.value.isNotBlank()
+                                && viewModel.ingresos_comentarios.value.isNotBlank()
+                                && viewModel.comentarios_jugadores.value.isNotBlank()
                     }
-                    if(isValidate==false){
+                    if (isValidate == false) {
                         Text(
                             text = "¡ Hay campos vacíos !",
                             modifier = Modifier
-                                .align(Alignment.CenterHorizontally)
-                            ,
+                                .align(Alignment.CenterHorizontally),
                             fontSize = 13.sp,
                             textAlign = TextAlign.Start,
                         )
@@ -405,13 +422,13 @@ fun ComentariosGeneralesJugadoresExpand(
                     val isRotated = rememberSaveable { mutableStateOf(false) }
                     val rotationAngle by animateFloatAsState(
                         targetValue = if (isRotated.value) 360F else 0F,
-                        animationSpec = tween(durationMillis = 500,easing = FastOutLinearInEasing)
+                        animationSpec = tween(durationMillis = 500, easing = FastOutLinearInEasing)
 
                     )
                     Button(
                         enabled = isValidate,
                         onClick = {
-                            viewModelPromotorNuevaVisita.addComentGeneralsJugadores()
+                            viewModel.addComentGeneralsJugadores()
                             isRotated.value = !isRotated.value
                         },
                         modifier = Modifier
@@ -423,7 +440,8 @@ fun ComentariosGeneralesJugadoresExpand(
                             },
                         elevation = ButtonDefaults.elevation(defaultElevation = 5.dp),
                         shape = RoundedCornerShape(10),
-                        colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.reds)
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = colorResource(id = R.color.reds)
                         )
                     ) {
                         Icon(
@@ -433,16 +451,22 @@ fun ComentariosGeneralesJugadoresExpand(
                         )
                     }
                     Spacer(Modifier.width(20.dp))
-                    viewModelPromotorNuevaVisita.dataComentariosGeneralesJugadores.forEach { item ->
-                        var expandcards by remember { mutableStateOf(false)}
+                    viewModel.dataComentariosGeneralesJugadores.forEach { item ->
+                        var expandcards by remember { mutableStateOf(false) }
                         val perfil = remember { mutableStateOf("") }
-                        if(item.perfil!!.id==1){ perfil.value="Alto" }
-                        if(item.perfil!!.id==2){ perfil.value="Medio" }
-                        if(item.perfil!!.id==3){ perfil.value="Bajo" }
+                        if (item.perfil!!.id == 1) {
+                            perfil.value = "Alto"
+                        }
+                        if (item.perfil!!.id == 2) {
+                            perfil.value = "Medio"
+                        }
+                        if (item.perfil!!.id == 3) {
+                            perfil.value = "Bajo"
+                        }
                         Card(modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 5.dp)
-                            .clickable{ expandcards = !expandcards }
+                            .clickable { expandcards = !expandcards }
                         ) {
                             Row(
                                 modifier = Modifier
@@ -458,14 +482,17 @@ fun ComentariosGeneralesJugadoresExpand(
                                         .weight(1f)
                                         .padding(horizontal = 20.dp)
                                 ) {
-                                    Column(){
+                                    Column() {
                                         Text(
                                             text = "Perfil: ${item.perfil!!.nombre} \nJuego: ${item.juego!!.nombre} ",
                                             fontSize = 15.sp,
                                             textAlign = TextAlign.Start,
-                                            modifier = Modifier.padding(vertical = 15.dp, horizontal = 5.dp)
+                                            modifier = Modifier.padding(
+                                                vertical = 15.dp,
+                                                horizontal = 5.dp
+                                            )
                                         )
-                                        if(expandcards){
+                                        if (expandcards) {
                                             Text(
                                                 text = "Ingresos $: ${item.ingresos!!} \nProcedencia: ${item.procedencia} \nComentario: ${item.comentario!!} ",
                                                 fontSize = 15.sp,

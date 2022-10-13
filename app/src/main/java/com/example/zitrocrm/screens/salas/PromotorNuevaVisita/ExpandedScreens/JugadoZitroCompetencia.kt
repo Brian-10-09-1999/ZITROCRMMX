@@ -1,6 +1,7 @@
 package com.example.zitrocrm.screens.salas.PromotorNuevaVisita.ExpandedScreens
 
 import android.annotation.SuppressLint
+import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.*
@@ -25,8 +26,10 @@ import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
@@ -66,6 +69,21 @@ fun JugadoZitroCompetencia(
     val zona = remember{ mutableStateListOf<Zona>() }
     val zona_fumar = remember{ mutableStateOf(false)}
     val zona_nofumar = remember{ mutableStateOf(false)}
+    val context = LocalContext.current
+    val tiro_minimo = remember{ mutableStateOf("") }
+    val tiro_maximo = remember{ mutableStateOf("") }
+    val tiro_promedio = remember{ mutableStateOf("") }
+    val apuestas_promedio = remember { mutableStateOf("") }
+    val promedio_ocupacion = remember{ mutableStateOf("") }
+    val unidadOcupacion = remember{ mutableStateOf("") }
+    var formatexpanded = remember { mutableStateOf(false) }
+    val format_hr_min = listOf("Hr", "Min")
+    val progresivos = remember{ mutableListOf<Progresivos>() }
+    val sap2 = remember{mutableStateOf(false)}
+    val lap2 = remember{mutableStateOf(false)}
+    val icon = if (alert_proveedor.value) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown
+    val icon2 = if (alert.value) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown
+    val focusManager = LocalFocusManager.current
 
     Card(
         backgroundColor = blackdark,
@@ -87,7 +105,7 @@ fun JugadoZitroCompetencia(
                     Column(
                         modifier = Modifier
                             .weight(0.15f)
-                            .align(Alignment.CenterVertically)
+                            .align(CenterVertically)
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.nav_maquinas_icon),
@@ -115,7 +133,7 @@ fun JugadoZitroCompetencia(
                     Column(
                         modifier = Modifier
                             .weight(0.15f)
-                            .align(Alignment.CenterVertically)
+                            .align(CenterVertically)
                     ) {
                         CardArrow(
                             onClick = onCardArrowClick,
@@ -135,7 +153,22 @@ fun JugadoZitroCompetencia(
                 producto_paqueteria = producto_paqueteria,
                 array_zona = zona,
                 zona_fumar = zona_fumar,
-                zona_nofumar = zona_nofumar
+                zona_nofumar = zona_nofumar,
+                context = context,
+                tiro_minimo = tiro_minimo,
+                tiro_maximo = tiro_maximo,
+                tiro_promedio = tiro_promedio,
+                apuestas_promedio = apuestas_promedio,
+                promedio_ocupacion = promedio_ocupacion,
+                unidadOcupacion = unidadOcupacion,
+                formatexpanded = formatexpanded,
+                format_hr_min = format_hr_min,
+                progresivos = progresivos,
+                icon = icon,
+                icon2 = icon2,
+                focusManager = focusManager,
+                sap2 = sap2,
+                lap2 = lap2
             )
         }
     }
@@ -155,20 +188,22 @@ fun JugadoZitroCompetenciaExpand(
     array_zona: SnapshotStateList<Zona>,
     zona_fumar: MutableState<Boolean>,
     zona_nofumar: MutableState<Boolean>,
+    context: Context,
+    tiro_minimo: MutableState<String>,
+    tiro_maximo: MutableState<String>,
+    tiro_promedio: MutableState<String>,
+    apuestas_promedio: MutableState<String>,
+    promedio_ocupacion: MutableState<String>,
+    unidadOcupacion: MutableState<String>,
+    formatexpanded: MutableState<Boolean>,
+    format_hr_min: List<String>,
+    progresivos: MutableList<Progresivos>,
+    icon: ImageVector,
+    icon2: ImageVector,
+    focusManager: FocusManager,
+    sap2: MutableState<Boolean>,
+    lap2: MutableState<Boolean>,
 ) {
-    val context = LocalContext.current
-    val tiro_minimo = remember{ mutableStateOf("") }
-    val tiro_maximo = remember{ mutableStateOf("") }
-    val tiro_promedio = remember{ mutableStateOf("") }
-    val apuestas_promedio = remember { mutableStateOf("") }
-    val promedio_ocupacion = remember{ mutableStateOf("") }
-    val unidadOcupacion = remember{ mutableStateOf("") }
-    var formatexpanded by remember { mutableStateOf(false) }
-    val format_hr_min = listOf("Hr", "Min")
-    val progresivos = remember{ mutableListOf<Progresivos>() }
-    val icon = if (alert_proveedor.value) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown
-    val icon2 = if (alert.value) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown
-    val focusManager = LocalFocusManager.current
     AnimatedVisibility(
         visible = expanded,
         enter = enterExpand + enterFadeIn,
@@ -195,15 +230,16 @@ fun JugadoZitroCompetenciaExpand(
                         alert_proveedor = alert_proveedor,
                         proveedor_info = proveedor_info,
                         onclick = {
-                            producto_paqueteria[0] = ""
-                            producto_paqueteria[1] = "0"
                             viewModel
                                 .getLibreriaCompetencia(
+                                    juegos = false,
                                     tipo = proveedor_info[2].toInt(),
                                     proveedorid = proveedor_info[1].toInt(),
                                     clasificacion = proveedor_info[2].toInt(),
                                     context = context
                                 )
+                            producto_paqueteria[0] = ""
+                            producto_paqueteria[1] = "0"
                         }
                     )
                     //--------------------ALERT PAQUETERIA---------------------//
@@ -248,7 +284,13 @@ fun JugadoZitroCompetenciaExpand(
                             onNext = { focusManager.moveFocus(FocusDirection.Down) }
                         ),
                         modifier = Modifier
-                            .fillMaxWidth(),
+                            .fillMaxWidth()
+                            .clickable {
+                                if (viewModel.list_familia_paqueteria.isNotEmpty()) {
+                                    alert.value = true
+                                }
+                            }
+                        ,
                         label = { Text("Producto") },
                         colors = TextFieldDefaults.textFieldColors(
                             textColor = Color.White
@@ -345,7 +387,6 @@ fun JugadoZitroCompetenciaExpand(
                             )
                         }
                     }
-                    Spacer(Modifier.height(10.dp))
                     Row(modifier = Modifier.fillMaxWidth()) {
                         OutlinedTextField(
                             value = tiro_minimo.value,
@@ -399,7 +440,6 @@ fun JugadoZitroCompetenciaExpand(
                             )
                         )
                     }
-                    Spacer(Modifier.height(10.dp))
                     OutlinedTextField(
                         value = tiro_promedio.value,
                         onValueChange = {
@@ -425,7 +465,6 @@ fun JugadoZitroCompetenciaExpand(
                             textColor = Color.White
                         )
                     )
-                    Spacer(Modifier.height(10.dp))
                     OutlinedTextField(
                         value = apuestas_promedio.value,
                         onValueChange = { apuestas_promedio.value = it },
@@ -448,7 +487,6 @@ fun JugadoZitroCompetenciaExpand(
                             textColor = Color.White
                         )
                     )
-                    Spacer(Modifier.height(10.dp))
                     Row(modifier = Modifier.fillMaxWidth()) {
                         OutlinedTextField(
                             value = promedio_ocupacion.value,
@@ -489,13 +527,13 @@ fun JugadoZitroCompetenciaExpand(
                             ),
                             modifier = Modifier
                                 .clickable {
-                                    formatexpanded = !formatexpanded
+                                    formatexpanded.value = !formatexpanded.value
                                 }
                                 .fillMaxWidth(1f),
                             label = { Text("Hr/Min") },
                             trailingIcon = {
                                 Icon(icon, "contentDescription",
-                                    Modifier.clickable { formatexpanded = !formatexpanded })
+                                    Modifier.clickable { formatexpanded.value = !formatexpanded.value })
                             },
                             colors = TextFieldDefaults.textFieldColors(
                                 textColor = Color.White
@@ -503,14 +541,14 @@ fun JugadoZitroCompetenciaExpand(
                         )
                     }
                     DropdownMenu(
-                        expanded = formatexpanded,
-                        onDismissRequest = { formatexpanded = false },
-                        modifier = Modifier.fillMaxWidth()
+                        expanded = formatexpanded.value,
+                        onDismissRequest = { formatexpanded.value = false },
+                        modifier = Modifier.padding(horizontal = 10.dp).fillMaxWidth()
                     ) {
                         format_hr_min.forEach { label ->
                             DropdownMenuItem(onClick = {
                                 unidadOcupacion.value = label
-                                formatexpanded = false
+                                formatexpanded.value = false
                             }) {
                                 Text(text = label)
                             }
@@ -548,14 +586,14 @@ fun JugadoZitroCompetenciaExpand(
                                 modifier = Modifier
                                     .padding(start = 5.dp)
                                     .align(CenterVertically),
-                                checked = viewModel.sap2.value,
+                                checked = sap2.value,
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = colorResource(R.color.reds),
                                     uncheckedColor = colorResource(R.color.graydark),
                                     checkmarkColor = colorResource(R.color.white)
                                 ),
                                 onCheckedChange = {
-                                    viewModel.sap2.value = it
+                                    sap2.value = it
                                     if(it){
                                         progresivos.add(Progresivos("1","Sap"))
                                     }else{
@@ -587,52 +625,43 @@ fun JugadoZitroCompetenciaExpand(
                                 modifier = Modifier
                                     .padding(start = 5.dp)
                                     .align(CenterVertically),
-                                checked = viewModel.lap2.value,
+                                checked = lap2.value,
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = colorResource(R.color.reds),
                                     uncheckedColor = colorResource(R.color.graydark),
                                     checkmarkColor = colorResource(R.color.white)
                                 ),
                                 onCheckedChange = {
-                                    viewModel.lap2.value = it
+                                    lap2.value = it
                                     if(it){
                                         progresivos.add(Progresivos("2","Sap"))
                                     }else{
                                         progresivos.remove(Progresivos("2","Sap"))
                                     }
-                                    //viewModel.checksZonaId()
                                 }
                             )
                         }
                     }
                     Spacer(Modifier.height(10.dp))
-                    /*val isValidate by derivedStateOf {
-                        viewModel.proveedor_lo_mas_jugado.value.isNotBlank()
-                                && viewModel.tiro_minimo.value.isNotBlank()
-                                && viewModel.tiro_maximo.value.isNotBlank()
-                                && viewModel.tiro_promedio.value.isNotBlank()
-                                && viewModel.apuestas_promedio.value.isNotBlank()
-                                && viewModel.promedio_ocupacion.value.isNotBlank()
-                                && viewModel.unidadOcupacion.value.isNotBlank()
-                    }
-                    /*if (isValidate == false) {
-                        Text(
-                            text = "¡ Hay campos vacios !",
-                            modifier = Modifier
-                                .align(Alignment.CenterHorizontally),
-                            fontSize = 13.sp,
-                            textAlign = TextAlign.Start,
-                        )
-                    }*/*/
-                    Spacer(Modifier.height(10.dp))
                     val isRotated = rememberSaveable { mutableStateOf(false) }
                     val rotationAngle by animateFloatAsState(
                         targetValue = if (isRotated.value) 360F else 0F,
                         animationSpec = tween(durationMillis = 500, easing = FastOutLinearInEasing)
-
                     )
+                    val isValidate by derivedStateOf {
+                        unidadOcupacion.value.isNotBlank()
+                                && apuestas_promedio.value.isNotBlank()
+                                && proveedor_info[0].isNotBlank()
+                                && proveedor_info[1].toInt()>0
+                                && tiro_minimo.value.isNotBlank()
+                                && tiro_maximo.value.isNotBlank()
+                                && tiro_promedio.value.isNotBlank()
+                                && array_zona.isNotEmpty()
+                                && promedio_ocupacion.value.isNotBlank()
+                                && progresivos.isNotEmpty()
+                    }
                     Button(
-                        //enabled = isValidate,
+                        enabled = isValidate,
                         onClick = {
                             viewModel.addZitroyComp(
                                 unidadOcupacion = unidadOcupacion,
@@ -645,7 +674,12 @@ fun JugadoZitroCompetenciaExpand(
                                 array_zona = array_zona,
                                 isRotated = isRotated,
                                 array_mas_jugado = array_mas_jugado,
-                                progresivos = progresivos
+                                progresivos = progresivos,
+                                promedio_ocupacion = promedio_ocupacion,
+                                zona_nofumar = zona_nofumar,
+                                zona_fumar = zona_fumar,
+                                sap2 = sap2,
+                                lap2 = lap2
                             )
                         },
                         modifier = Modifier
@@ -677,7 +711,7 @@ fun JugadoZitroCompetenciaExpand(
 
 
 @Composable
-fun dataItemMasjugado(
+fun DataItemMasjugado(
     item: MasJugado
 ) {
     var expandcards by remember {
@@ -734,6 +768,31 @@ fun dataItemMasjugado(
                                     bottom = 15.dp
                                 )
                             )
+                            if(item.zona.isNotEmpty()){
+                                item.zona.forEach {
+                                    Text(
+                                        text = "Zona: ${it.zona}",
+                                        fontSize = 15.sp,
+                                        textAlign = TextAlign.Start,
+                                        modifier = Modifier.padding(
+                                            horizontal = 5.dp
+                                        )
+                                    )
+                                }
+                            }
+                            if(item.progresivos.isNotEmpty()){
+                                item.progresivos.forEach {
+                                    Text(
+                                        text = "Progresivos: ${it.progresivos}",
+                                        fontSize = 15.sp,
+                                        textAlign = TextAlign.Start,
+                                        modifier = Modifier.padding(
+                                            horizontal = 5.dp
+                                        )
+                                    )
+                                }
+                            }
+
                         }
                     }
                 }
@@ -764,8 +823,8 @@ fun AlertPaqueteria(
             title = null,
             buttons = {
                 val title =
-                    if (tipo.value && proveedor_info[1].toInt() == 24 || tipo.value == false && proveedor_info[1].toInt() == 24) "SELECCIONA LA FAMILIA"
-                    else "SELECCIONA LA PAQUETERI"
+                    if (tipo.value && proveedor_info[1].toInt() == 24 || tipo.value == false && proveedor_info[1].toInt() == 24) "SELECCIONA UN SUBJUEGO"
+                    else "SELECCIONA UN JUEGO"
                 Box(
                     modifier = Modifier
                         .height(60.dp)

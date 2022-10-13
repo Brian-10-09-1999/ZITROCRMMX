@@ -38,9 +38,10 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
     var listHorarios = mutableStateListOf<Horarios>()
     fun texthours(): String {
         var text = ""
-        listHorarios.forEach {item -> text = "${text}${item.horario},"}
+        listHorarios.forEach { item -> text = "${text}${item.horario}," }
         return text
     }
+
     //---------------------------------------DETALLE DE OCUPACION---------------------------------------------//
     var list_familia_paqueteria = mutableStateListOf<CompetenciaArray>()
     var listdetalleOcu = mutableStateListOf<RowsDO2>()
@@ -123,10 +124,12 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         premio.value = ""
         diferencia.value = ""
     }
+
     fun removeAcumulados(item: Acumulados) {
         visitaPromotor.value!!.acumulados.remove(item)
         a()
     }
+
     //--------------------------------------LO MAS JUGADO ZITRO Y COMPETENCIA----------------------------------------//
     fun addZitroyComp(
         unidadOcupacion: MutableState<String>,
@@ -140,37 +143,52 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         isRotated: MutableState<Boolean>,
         array_mas_jugado: ArrayList<MasJugado>,
         progresivos: MutableList<Progresivos>,
+        promedio_ocupacion: MutableState<String>,
+        zona_nofumar: MutableState<Boolean>,
+        zona_fumar: MutableState<Boolean>,
+        sap2: MutableState<Boolean>,
+        lap2: MutableState<Boolean>,
     ) {
-        val ocupa : Int
-        if(unidadOcupacion.value=="Hr") ocupa = promedio_ocupacion.value.toInt()*60
-        else ocupa = promedio_ocupacion.value.toInt()
-        //viewModel.addLoMasJugadoZitroComp()
         array_mas_jugado.add(
             MasJugado(
                 apuestasPromedio = apuestas_promedio.value,
-                juego = ID(id=producto_paqueteria[1].toInt(),nombre=producto_paqueteria[0]),
+                juego = ID(id = producto_paqueteria[1].toInt(), nombre = producto_paqueteria[0]),
                 progresivos = ArrayList(progresivos),
-                promedioOcupacion = ocupa,
-                proveedor = Rows(id = proveedor_info[1].toInt(), nombre = proveedor_info[0], tipo = proveedor_info[2].toInt()),
+                promedioOcupacion = if (unidadOcupacion.value == "Hr") promedio_ocupacion.value.toInt() * 60 else promedio_ocupacion.value.toInt(),
+                proveedor = Rows(
+                    id = proveedor_info[1].toInt(),
+                    nombre = proveedor_info[0],
+                    tipo = proveedor_info[2].toInt()
+                ),
                 tiroMinimo = tiro_minimo.value.toInt(),
                 tiroMaximo = tiro_maximo.value.toInt(),
                 tiroPromedio = tiro_promedio.value.toInt(),
                 zona = ArrayList(array_zona),
-                unidadOcupacion = unidadOcupacion.value.toString()
+                unidadOcupacion = unidadOcupacion.value
             )
         )
         a()
+        apuestas_promedio.value = ""
+        producto_paqueteria[1] = "0"
+        producto_paqueteria[0] = ""
+        progresivos.clear()
+        promedio_ocupacion.value = ""
+        proveedor_info[0] = ""
+        proveedor_info[1] = "0"
+        proveedor_info[2] = "0"
+        tiro_minimo.value = ""
+        tiro_maximo.value = ""
+        tiro_promedio.value = ""
+        array_zona.clear()
+        unidadOcupacion.value = ""
+        lap2.value = false
+        sap2.value = false
+        zona_nofumar.value = false
+        zona_fumar.value = false
         isRotated.value = !isRotated.value
     }
 
 
-
-
-
-    val sap2 = mutableStateOf(false)
-    val lap2 = mutableStateOf(false)
-    val zona_fumar = mutableStateOf(false)
-    val zona_nofumar = mutableStateOf(false)
     var positivo = mutableStateOf(true)
     var negativo = mutableStateOf(false)
     var positivo2 = mutableStateOf(true)
@@ -180,7 +198,6 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
     val juegosFilter = mutableStateListOf<Juegos>()
     val foliostecnicossalas: MutableList<rows> = arrayListOf()
 
-    val unidadOcupacion = mutableStateOf("")
     var dataProvedorOcupacion = mutableStateListOf<Ocupacion>()
     val dataProvedorOcupacionSlots = mutableStateListOf<OcupacionSlots>()
     val proveedores_selections: MutableList<Rows> = arrayListOf()
@@ -189,18 +206,6 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
 
     /**ACUMULADOS BINGO**/
     val dataAcumuladosBingo: MutableList<Acumulados> = arrayListOf()
-
-    /**LO MAS JUGADO ZITRO Y COMPETENCIA**/
-    var id_proveedor_lo_mas_jugado = mutableStateOf(0)
-    var proveedor_lo_mas_jugado = mutableStateOf("")
-    var tiro_minimo = mutableStateOf("")
-    var tiro_maximo = mutableStateOf("")
-    var tiro_promedio = mutableStateOf("")
-    var apuestas_promedio = mutableStateOf("")
-    var promedio_ocupacion = mutableStateOf("")
-    val dataLoMasJugadoZitroZomp: MutableList<MasJugado> = arrayListOf()
-    val Zonaid: MutableList<Zona> = arrayListOf()
-    val Progresivos: MutableList<Progresivos> = arrayListOf()
 
     /**COMENTARIOS GENERALES JUGADORES**/
     var calificacion_comentarios = mutableStateOf(true)
@@ -254,7 +259,6 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         dataProvedorOcupacion.clear()
         dataProvedorOcupacionSlots.clear()
         dataAcumuladosBingo.clear()
-        dataLoMasJugadoZitroZomp.clear()
         dataComentariosGeneralesJugadores.clear()
         addSonido.clear()
         dataObservacionesCompetencia.clear()
@@ -387,13 +391,19 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
     }
 
     //Service api que nos devuelve las librerias
-    fun getLibreriaCompetencia(tipo: Int, proveedorid: Int, clasificacion: Int,context: Context) {
+    fun getLibreriaCompetencia(
+        juegos: Boolean,
+        tipo: Int,
+        proveedorid: Int,
+        clasificacion: Int,
+        context: Context
+    ) {
         viewModelScope.launch(Dispatchers.IO) {
             val token = SharedPrefence(context).getToken()
             val authService = RetrofitHelper.getAuthService()
             try {
                 alertdialog(1, "")
-                if (proveedorid == 24) {
+                if (proveedorid == 24 && juegos) {
                     val responseService = authService.getJuegosZitro(
                         token = token.toString(),
                         tipo = tipo,
@@ -402,6 +412,23 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                     if (responseService.body()!!.ok!!) {
                         list_familia_paqueteria.clear()
                         responseService.body()!!.juegos.forEach {
+                            list_familia_paqueteria.add(
+                                CompetenciaArray(
+                                    id = it.id,
+                                    nombre = it.nombre,
+                                    tipo = tipo
+                                )
+                            )
+                        }
+                    }
+                } else if (proveedorid == 24 && juegos == false) {
+                    val responseService = authService.getSubJuegos(
+                        token = token.toString(),
+                        tipo = tipo
+                    )
+                    if (responseService.body()!!.ok!!) {
+                        list_familia_paqueteria.clear()
+                        responseService.body()!!.rows.forEach {
                             list_familia_paqueteria.add(
                                 CompetenciaArray(
                                     id = it.id,
@@ -443,60 +470,6 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         if (inicio > 0 && fin > 0) {
             for (i in inicio..fin) {
                 listHorarios.add(Horarios(i.toString(), "", "", ""))
-            }
-        }
-    }
-
-    fun selectProveedorLoMasJugado(id: Int, nombre: String) {
-        alertProveedorLoMasJugado.value = false
-        proveedor_lo_mas_jugado.value = nombre
-        id_proveedor_lo_mas_jugado.value = id
-    }
-
-    fun addLoMasJugadoZitroComp() {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                if (unidadOcupacion.value == "Hr") {
-                    val sum = mutableStateOf(0)
-                    sum.value = promedio_ocupacion.value.toInt() * 60
-                    promedio_ocupacion.value = sum.value.toString()
-                }
-                /*dataLoMasJugadoZitroZomp.add(
-                    MasJugado(
-                        proveedor = ID(
-                            id_proveedor_lo_mas_jugado.value,
-                            proveedor_lo_mas_jugado.value
-                        ),
-                        tiroMinimo = tiro_minimo.value.toInt(),
-                        tiroMaximo = tiro_maximo.value.toInt(),
-                        tiroPromedio = tiro_promedio.value.toInt(),
-                        apuestasPromedio = apuestas_promedio.value,
-                        promedioOcupacion = promedio_ocupacion.value.toInt(),
-                        zona = ArrayList<Zona>(Zonaid),
-                        progresivos = ArrayList<Progresivos>(Progresivos),
-                        juego = ID(id_producto_mas_jugado.value, producto_mas_jugado.value),
-                        unidadOcupacion = unidadOcupacion.value
-                    )
-                )*/
-                Log.d("SUCCESS", "LO MAS JUGADO ARRAY" + dataLoMasJugadoZitroZomp)
-                id_proveedor_lo_mas_jugado.value = 0
-                proveedor_lo_mas_jugado.value = ""
-                tiro_minimo.value = ""
-                tiro_maximo.value = ""
-                tiro_promedio.value = ""
-                apuestas_promedio.value = ""
-                promedio_ocupacion.value = ""
-                Zonaid.clear()
-                Progresivos.clear()
-                proveedor_lo_mas_jugado.value = ""
-                //producto_mas_jugado.value = ""
-                //id_producto_mas_jugado.value = 0
-                zona_fumar.value = false
-                zona_nofumar.value = false
-                sap2.value = false
-                lap2.value = false
-            } catch (e: Exception) {
-                Log.d("Exception", "LO MAS JUGADO", e)
             }
         }
     }

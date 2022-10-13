@@ -59,9 +59,9 @@ interface AuthApiService {
 
     @GET(Val_Constants.API_CATALOGOS_JUEGOS)
     suspend fun getJuegosZitro(
-        @Header("x-token") token: String,
-        @Query("tipo") tipo:Int,
-        @Query("clasificacion") clasificacion :Int
+        @Header("x-token") token: String?,
+        @Query("tipo") tipo:Int?,
+        @Query("clasificacion") clasificacion :Int?
     )
     : Response<JuegosFilterDto>
 
@@ -85,11 +85,11 @@ interface AuthApiService {
         @Query("proveedor") proveedorid : Int,
     ): CompetenciaLibs
 
-    @GET(Val_Constants.API_SALAS_SUBJUEGOS_OCUPACION)
-    suspend fun getSubJuegosOcupacion (
+    @GET(Val_Constants.API_SALAS_SUBJUEGOS)
+    suspend fun getSubJuegos (
         @Header("x-token") token :String,
-        @Query("juego") juegoid:Int)
-    : SubJuegos
+        @Query("tipo") tipo:Int)
+    : Response<SubJuegos>
 
     @GET(Val_Constants.API_JUEGOS_TIPO_CARTONES)
     suspend fun getTipoCartones (

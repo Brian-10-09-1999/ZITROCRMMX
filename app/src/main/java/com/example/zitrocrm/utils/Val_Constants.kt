@@ -19,7 +19,7 @@ object Val_Constants {
     const val API_SALAS_FOLIO_TECNICO = "/api/salas/foliosTecnicos"
     const val API_SALAS_VISITAS_PROMOTORES_VISITA = "/api/salas/visitas/promotores"
     const val API_SALAS_COMPETENCIA_LIBRERIAS = "api/salas/competencia"
-    const val API_SALAS_SUBJUEGOS_OCUPACION = "api/catalogos/subjuegos"
+    const val API_SALAS_SUBJUEGOS = "api/catalogos/subjuegos"
     const val API_JUEGOS_TIPO_CARTONES = "api/catalogos/tipoCarton"
     const val API_FAMILIA_BINGO_JUEGOS = "api/catalogos/familiaBingo"
     const val API_ORDENES_CAMBIO = "api/maquinas/ordenesCambio/prioridades"
