@@ -8,6 +8,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -16,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,7 +26,6 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
@@ -34,15 +36,15 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.unit.toSize
-import androidx.navigation.NavController
+import androidx.compose.ui.window.DialogProperties
 import com.example.zitrocrm.R
-import com.example.zitrocrm.navigation.Destination
+import com.example.zitrocrm.network.models_dto.DetalleOcupacionDto.Comentarios
+import com.example.zitrocrm.network.models_dto.DetalleOcupacionDto.ID
 import com.example.zitrocrm.network.models_dto.DetalleOcupacionDto.Proveedor
 import com.example.zitrocrm.screens.salas.*
 import com.example.zitrocrm.screens.salas.PromotorNuevaVisita.PromotorNuevaVisitaViewModel
-import com.example.zitrocrm.screens.salas.PromotorNuevaVisita.components.alertJuegosComentariosJugadores
 import com.example.zitrocrm.ui.theme.blackdark
+import com.example.zitrocrm.ui.theme.graydark
 
 @ExperimentalAnimationApi
 @SuppressLint("UnusedTransitionTargetStateParameter")
@@ -51,9 +53,17 @@ fun ComentariosGeneralesJugadores(
     card6: String,
     onCardArrowClick: () -> Unit,
     expanded: Boolean,
-    viewModelPromotorNuevaVisita: PromotorNuevaVisitaViewModel,
-    navController: NavController
+    viewModel: PromotorNuevaVisitaViewModel,
+    coment_generales: ArrayList<Comentarios>
 ) {
+    val tipo = remember { mutableStateOf(true) }
+    val paqueteria_familia = remember { mutableStateListOf("", "0") }
+    val perfil_selec = remember { mutableStateListOf("", "0") }
+    val procedencia_comentarios = remember { mutableStateOf("") }
+    val ingresos_comentarios = remember { mutableStateOf("") }
+    val comentarios_jugadores = remember { mutableStateOf("") }
+    val alert = remember { mutableStateOf(false) }
+
     Card(
         backgroundColor = blackdark,
         shape = RoundedCornerShape(15.dp),
@@ -112,9 +122,16 @@ fun ComentariosGeneralesJugadores(
                 }
             }
             ComentariosGeneralesJugadoresExpand(
-                expanded,
-                viewModelPromotorNuevaVisita,
-                navController
+                expanded = expanded,
+                viewModel = viewModel,
+                coment_generales = coment_generales,
+                tipo = tipo,
+                paqueteria_familia = paqueteria_familia,
+                perfil_selec = perfil_selec,
+                procedencia = procedencia_comentarios,
+                ingresos = ingresos_comentarios,
+                comentarios_jugadores = comentarios_jugadores,
+                alert = alert
             )
         }
     }
@@ -125,7 +142,14 @@ fun ComentariosGeneralesJugadores(
 fun ComentariosGeneralesJugadoresExpand(
     expanded: Boolean = true,
     viewModel: PromotorNuevaVisitaViewModel,
-    navController: NavController
+    coment_generales: ArrayList<Comentarios>,
+    tipo: MutableState<Boolean>,
+    paqueteria_familia: SnapshotStateList<String>,
+    perfil_selec: SnapshotStateList<String>,
+    procedencia: MutableState<String>,
+    ingresos: MutableState<String>,
+    comentarios_jugadores: MutableState<String>,
+    alert: MutableState<Boolean>
 ) {
     AnimatedVisibility(
         visible = expanded,
@@ -147,27 +171,23 @@ fun ComentariosGeneralesJugadoresExpand(
                         .fillMaxSize()
                         .padding(10.dp)
                 ) {
-                    var perfilexpanded by remember { mutableStateOf(false) }
+                    val perfilexpanded = remember { mutableStateOf(false) }
                     val perfil = listOf(
                         Proveedor(id = 1, nombre = "Alto"),
                         Proveedor(id = 2, nombre = "Medio"),
                         Proveedor(id = 3, nombre = "Bajo")
                     )
-                    var perfilselectedText by remember { mutableStateOf("") }
-                    var textfieldSize by remember { mutableStateOf(Size.Zero) }
-                    val icon = if (expanded) Icons.Filled.KeyboardArrowUp else  Icons.Filled.KeyboardArrowDown
+                    val textfieldSize by remember { mutableStateOf(Size.Zero) }
+                    val icon =
+                        if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown
                     val focusManager = LocalFocusManager.current
 
                     //-----------------------------------------------------------------------------//
-                    val alert_proveedor = remember { mutableStateOf(false) }
-                    val proveedor_info = remember { mutableStateListOf("", "0","0") }
-                    var positivo = remember {mutableStateOf(true)}
-                    var negativo = remember { mutableStateOf(false)}
-                    AlertProveedorSeleccionado(
-                        list_proveedor = viewModel.proveedores_selections,
-                        alert_proveedor = alert_proveedor,
-                        proveedor_info = proveedor_info,
-                        onclick = {}
+
+                    AlertJuegosComent(
+                        viewModel = viewModel,
+                        paqueteria_familia = paqueteria_familia,
+                        alert = alert
                     )
                     //-----------------------------------------------------------------------------//
 
@@ -179,7 +199,6 @@ fun ComentariosGeneralesJugadoresExpand(
                         fontSize = 16.sp
                     )
                     Spacer(Modifier.height(10.dp))
-
                     Row {
                         Row(
                             modifier = Modifier
@@ -203,19 +222,14 @@ fun ComentariosGeneralesJugadoresExpand(
                                 modifier = Modifier
                                     .padding(start = 5.dp)
                                     .align(Alignment.CenterVertically),
-                                checked = viewModel.positivo.value,
+                                checked = tipo.value,
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = colorResource(R.color.reds),
                                     uncheckedColor = colorResource(R.color.graydark),
                                     checkmarkColor = colorResource(R.color.white)
                                 ),
                                 onCheckedChange = {
-                                    viewModel.positivo.value = it
-                                    if (it) {
-                                        viewModel.negativo.value = false
-                                        viewModel.calificacion_comentarios.value =
-                                            true
-                                    }
+                                    if (it) tipo.value = true
                                 }
                             )
                         }
@@ -242,104 +256,78 @@ fun ComentariosGeneralesJugadoresExpand(
                                 modifier = Modifier
                                     .padding(start = 5.dp)
                                     .align(Alignment.CenterVertically),
-                                checked = viewModel.negativo.value,
+                                checked = tipo.value == false,
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = colorResource(R.color.reds),
                                     uncheckedColor = colorResource(R.color.graydark),
                                     checkmarkColor = colorResource(R.color.white)
                                 ),
                                 onCheckedChange = {
-                                    viewModel.negativo.value = it
-                                    if (it) {
-                                        viewModel.positivo.value = false
-                                        viewModel.calificacion_comentarios.value =
-                                            false
-                                    }
+                                    if (it) tipo.value = false
                                 }
                             )
                         }
                     }
-                    Spacer(Modifier.height(10.dp))
                     OutlinedTextField(
                         enabled = false,
-                        value = viewModel.juego_comentarios.value,
+                        value = paqueteria_familia[0],
                         onValueChange = {},
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            keyboardType = KeyboardType.Ascii,
-                            imeAction = ImeAction.Next
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                        ),
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                alertJuegosComentariosJugadores.value = true
-                                navController.navigate(route = Destination.Dialog.route)
-                            }
-                            .onGloballyPositioned { coordinates ->
-                                //This value is used to assign to the DropDown the same width
-                                textfieldSize = coordinates.size.toSize()
+                                alert.value = true
+                                /*alertJuegosComentariosJugadores.value = true
+                                navController.navigate(route = Destination.Dialog.route)*/
                             },
                         label = { Text("Juegos") },
                         trailingIcon = {
-                            Icon(icon, "contentDescription",
-                                Modifier.clickable {
-                                    alertJuegosComentariosJugadores.value = true
-                                    navController.navigate(route = Destination.Dialog.route)
-                                }
-                            )
-                        }
+                            Icon(icon, "contentDescription")
+                        }, colors = TextFieldDefaults.textFieldColors(
+                            textColor = Color.White
+                        )
                     )
-
-                    Spacer(Modifier.height(10.dp))
                     OutlinedTextField(
                         enabled = false,
-                        value = viewModel.perfil_comentarios.value,
-                        onValueChange = { perfilselectedText },
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            keyboardType = KeyboardType.Ascii,
-                            imeAction = ImeAction.Next
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                        ),
+                        value = perfil_selec[0],
+                        onValueChange = { },
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                perfilexpanded = !perfilexpanded
-                            }
-                            .onGloballyPositioned { coordinates ->
-                                textfieldSize = coordinates.size.toSize()
+                                perfilexpanded.value = true
                             },
                         label = { Text("Perfil") },
                         trailingIcon = {
                             Icon(icon, "contentDescription",
-                                Modifier.clickable { perfilexpanded = !perfilexpanded })
-                        }
+                                Modifier.clickable { perfilexpanded.value = true })
+                        }, colors = TextFieldDefaults.textFieldColors(
+                            textColor = Color.White
+                        )
                     )
-                    DropdownMenu(
-                        expanded = perfilexpanded,
-                        onDismissRequest = { perfilexpanded = false },
+                    AlertJuegosPerfil(
+                        alert = perfilexpanded,
+                        perfil = perfil,
+                        perfil_selec = perfil_selec
+                    )
+                    /*DropdownMenu(
+                        expanded = perfilexpanded.value,
+                        onDismissRequest = { perfilexpanded.value = false },
                         modifier = Modifier
                             .width(with(LocalDensity.current) { textfieldSize.width.toDp() })
                     ) {
                         perfil.forEach { label ->
                             DropdownMenuItem(onClick = {
-                                viewModel.perfil_comentarios.value =
-                                    label.nombre.toString()
-                                viewModel.id_perfil.value = label.id!!.toInt()
-                                perfilexpanded = false
+                                perfil_selec[0] = label.nombre.toString()
+                                perfil_selec[1] = label.id.toString()
+                                perfilexpanded.value = false
                             }) {
                                 Text(text = label.nombre.toString())
                             }
                         }
-                    }
-                    Spacer(Modifier.height(10.dp))
+                    }*/
                     OutlinedTextField(
-                        value = viewModel.procedencia_comentarios.value,
+                        value = procedencia.value,
                         onValueChange = {
-                            viewModel.procedencia_comentarios.value = it
+                            procedencia.value = it
                         },
                         label = { Text("Procedencia") },
                         modifier = Modifier.fillMaxWidth(),
@@ -355,13 +343,16 @@ fun ComentariosGeneralesJugadoresExpand(
                                 imageVector = Icons.Filled.FilePresent,
                                 contentDescription = "Procedencia"
                             )
-                        }
+                        },
+                        colors = TextFieldDefaults.textFieldColors(
+                            textColor = Color.White
+                        )
                     )
-                    Spacer(Modifier.height(10.dp))
                     OutlinedTextField(
-                        value = viewModel.ingresos_comentarios.value,
+                        value = ingresos.value,
                         onValueChange = {
-                            viewModel.ingresos_comentarios.value = it
+                            if (viewModel.getValidationSum(it)) ingresos.value = it
+                            else ingresos.value = ""
                         },
                         label = { Text("Ingresos") },
                         modifier = Modifier.fillMaxWidth(),
@@ -377,13 +368,15 @@ fun ComentariosGeneralesJugadoresExpand(
                                 imageVector = Icons.Filled.MonetizationOn,
                                 contentDescription = "Tiro"
                             )
-                        }
+                        },
+                        colors = TextFieldDefaults.textFieldColors(
+                            textColor = Color.White
+                        )
                     )
-                    Spacer(Modifier.height(10.dp))
                     OutlinedTextField(
-                        value = viewModel.comentarios_jugadores.value,
+                        value = comentarios_jugadores.value,
                         onValueChange = {
-                            viewModel.comentarios_jugadores.value = it
+                            comentarios_jugadores.value = it
                         },
                         label = { Text("Comentarios") },
                         modifier = Modifier.fillMaxWidth(),
@@ -399,26 +392,21 @@ fun ComentariosGeneralesJugadoresExpand(
                                 imageVector = Icons.Filled.Comment,
                                 contentDescription = "Comentarios"
                             )
-                        }
+                        },
+                        colors = TextFieldDefaults.textFieldColors(
+                            textColor = Color.White
+                        )
                     )
                     Spacer(Modifier.height(10.dp))
                     val isValidate by derivedStateOf {
-                        viewModel.juego_comentarios.value.isNotBlank()
-                                && viewModel.perfil_comentarios.value.isNotBlank()
-                                && viewModel.procedencia_comentarios.value.isNotBlank()
-                                && viewModel.ingresos_comentarios.value.isNotBlank()
-                                && viewModel.comentarios_jugadores.value.isNotBlank()
+                        paqueteria_familia[1].toInt()>0
+                                && paqueteria_familia[0].isNotBlank()
+                                && perfil_selec[1].toInt()>0
+                                && perfil_selec[0].isNotBlank()
+                                && procedencia.value.isNotBlank()
+                                && ingresos.value.isNotBlank()
+                                && comentarios_jugadores.value.isNotBlank()
                     }
-                    if (isValidate == false) {
-                        Text(
-                            text = "¡ Hay campos vacíos !",
-                            modifier = Modifier
-                                .align(Alignment.CenterHorizontally),
-                            fontSize = 13.sp,
-                            textAlign = TextAlign.Start,
-                        )
-                    }
-                    Spacer(Modifier.height(10.dp))
                     val isRotated = rememberSaveable { mutableStateOf(false) }
                     val rotationAngle by animateFloatAsState(
                         targetValue = if (isRotated.value) 360F else 0F,
@@ -428,7 +416,19 @@ fun ComentariosGeneralesJugadoresExpand(
                     Button(
                         enabled = isValidate,
                         onClick = {
-                            viewModel.addComentGeneralsJugadores()
+                            coment_generales.add(
+                                Comentarios(
+                                    juego = ID(id=paqueteria_familia[1].toInt(), nombre = paqueteria_familia[0]),
+                                    perfil = ID(id=perfil_selec[1].toInt(), nombre= perfil_selec[0]),
+                                    procedencia = procedencia.value,
+                                    ingresos = ingresos.value.toInt(),
+                                    comentario = comentarios_jugadores.value,
+                                    tipo = tipo.value
+                                )
+                            )
+
+                            //viewModel.addComentGeneralsJugadores()
+                            viewModel.a()
                             isRotated.value = !isRotated.value
                         },
                         modifier = Modifier
@@ -451,66 +451,287 @@ fun ComentariosGeneralesJugadoresExpand(
                         )
                     }
                     Spacer(Modifier.width(20.dp))
-                    viewModel.dataComentariosGeneralesJugadores.forEach { item ->
-                        var expandcards by remember { mutableStateOf(false) }
-                        val perfil = remember { mutableStateOf("") }
-                        if (item.perfil!!.id == 1) {
-                            perfil.value = "Alto"
+                    /*viewModel.dataComentariosGeneralesJugadores.forEach { item ->
+
+                    }*/
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ItemComentariosG(
+    item: Comentarios
+) {
+    var expandcards by remember { mutableStateOf(false) }
+    val perfil = remember { mutableStateOf("") }
+    val icon = if (item.tipo!!) Icons.Filled.ThumbUp else Icons.Filled.ThumbDown
+
+    if (item.perfil!!.id == 1) {
+        perfil.value = "Alto"
+    }
+    if (item.perfil!!.id == 2) {
+        perfil.value = "Medio"
+    }
+    if (item.perfil!!.id == 3) {
+        perfil.value = "Bajo"
+    }
+    Card(modifier = Modifier
+        .fillMaxWidth()
+        .padding(vertical = 5.dp,horizontal = 15.dp)
+        .clickable { expandcards = !expandcards }
+    ) {
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(10.dp))
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp, vertical = 5.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 10.dp)
+            ) {
+                Column {
+                    Row {
+                        Icon(
+                            Icons.Filled.SnippetFolder, "Diferencia", modifier = Modifier.align(
+                                Alignment.CenterVertically
+                            )
+                        )
+                        Column {
+                            Text(
+                                text = "Juego: ${item.juego!!.nombre}",
+                                fontSize = 15.sp,
+                                textAlign = TextAlign.Start,
+                                modifier = Modifier.padding(vertical = 10.dp, horizontal = 10.dp)
+                            )
+                            Text(
+                                text = "Perfil: ${item.perfil!!.nombre}",
+                                fontSize = 15.sp,
+                                textAlign = TextAlign.Start,
+                                modifier = Modifier.padding(vertical = 10.dp, horizontal = 10.dp)
+                            )
                         }
-                        if (item.perfil!!.id == 2) {
-                            perfil.value = "Medio"
-                        }
-                        if (item.perfil!!.id == 3) {
-                            perfil.value = "Bajo"
-                        }
-                        Card(modifier = Modifier
+                    }
+                    Column(
+                        modifier = Modifier
+                            .padding(top = 10.dp)
                             .fillMaxWidth()
-                            .padding(vertical = 5.dp)
-                            .clickable { expandcards = !expandcards }
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 10.dp),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(Icons.Filled.SnippetFolder, "Diferencia")
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(horizontal = 20.dp)
-                                ) {
-                                    Column() {
-                                        Text(
-                                            text = "Perfil: ${item.perfil!!.nombre} \nJuego: ${item.juego!!.nombre} ",
-                                            fontSize = 15.sp,
-                                            textAlign = TextAlign.Start,
-                                            modifier = Modifier.padding(
-                                                vertical = 15.dp,
-                                                horizontal = 5.dp
-                                            )
-                                        )
-                                        if (expandcards) {
-                                            Text(
-                                                text = "Ingresos $: ${item.ingresos!!} \nProcedencia: ${item.procedencia} \nComentario: ${item.comentario!!} ",
-                                                fontSize = 15.sp,
-                                                textAlign = TextAlign.Start,
-                                                modifier = Modifier.padding(
-                                                    start = 5.dp,
-                                                    end = 5.dp,
-                                                    bottom = 15.dp
-                                                )
-                                            )
-                                        }
-                                    }
-                                }
-                            }
+                            .clip(RoundedCornerShape(5.dp))
+                            .background(graydark)
+                            .padding(2.dp)
+                    ) {
+                        if (expandcards) {
+                            Text(
+                                text = "Ingresos: ${item.ingresos}",
+                                fontSize = 15.sp,
+                                textAlign = TextAlign.Start,
+                                modifier = Modifier.padding(
+                                    start = 5.dp,
+                                    end = 5.dp,
+                                    bottom = 15.dp
+                                )
+                            )
+                            Text(
+                                text = "Procedencia: ${item.procedencia}",
+                                fontSize = 15.sp,
+                                textAlign = TextAlign.Start,
+                                modifier = Modifier.padding(horizontal = 10.dp)
+                            )
+                            Text(
+                                text = "Comentarios: ${item.comentario}",
+                                fontSize = 15.sp,
+                                textAlign = TextAlign.Start,
+                                modifier = Modifier.padding(horizontal = 10.dp)
+                            )
                         }
                     }
                 }
             }
+            Column() {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = "delete"
+                )
+                IconButton(onClick = {
+                    //viewModelNV.removeMasJugados(item)
+                }) {
+                    Icon(
+                        imageVector = Icons.Filled.Delete,
+                        contentDescription = "delete"
+                    )
+                }
+            }
         }
+        //---
+        /*Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(10.dp))
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Filled.SnippetFolder, "Diferencia")
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 20.dp)
+            ) {
+                Column() {
+                    Text(
+                        text = "Perfil: ${item.perfil!!.nombre} \nJuego: ${item.juego!!.nombre} ",
+                        fontSize = 15.sp,
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier.padding(
+                            vertical = 15.dp,
+                            horizontal = 5.dp
+                        )
+                    )
+                    if (expandcards) {
+                        Text(
+                            text = "Ingresos $: ${item.ingresos!!} \nProcedencia: ${item.procedencia} \nComentario: ${item.comentario!!} ",
+                            fontSize = 15.sp,
+                            textAlign = TextAlign.Start,
+                            modifier = Modifier.padding(
+                                start = 5.dp,
+                                end = 5.dp,
+                                bottom = 15.dp
+                            )
+                        )
+                    }
+                }
+            }
+        }*/
+    }
+}
+
+@Composable
+fun AlertJuegosComent(
+    viewModel: PromotorNuevaVisitaViewModel,
+    paqueteria_familia: SnapshotStateList<String>,
+    alert: MutableState<Boolean>
+) {
+    if (alert.value) {
+        AlertDialog(
+            onDismissRequest = {},
+            title = null,
+            buttons = {
+                Box(
+                    modifier = Modifier
+                        .height(60.dp)
+                        .fillMaxWidth()
+                        .background(color = colorResource(R.color.reds))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .align(Alignment.Center)
+                    ) {
+                        Icon(
+                            Icons.Filled.ArrowBack, "Hora", modifier = Modifier
+                                .align(Alignment.CenterVertically)
+                                .padding(horizontal = 10.dp)
+                                .clickable {
+                                    alert.value = false
+                                    //alertJuegosComentariosJugadores.value = false
+                                    //navController.popBackStack()
+                                }
+                        )
+                        Text(
+                            text = "SELECCIONA EL PRODUCTO",
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        )
+                    }
+                }
+                LazyColumn {
+                    itemsIndexed(viewModel.juegosFilter) { index, label ->
+                        Column(modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                paqueteria_familia[0] = label.nombre.toString()
+                                paqueteria_familia[1] = label.id.toString()
+                                //navController.popBackStack()
+                                /*viewModel.selectJuegoComentGeneralesJugadores(
+                                    id = label.id!!,
+                                    nombre = label.nombre!!,
+                                )*/
+                                alert.value = false
+                            }
+                            .padding(horizontal = 20.dp, vertical = 10.dp)) {
+                            Text(text = label.nombre.toString())
+                        }
+                    }
+                }
+            },
+            properties = DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = false
+            ),
+            shape = RoundedCornerShape(15.dp)
+        )
+    }
+}
+@Composable
+fun AlertJuegosPerfil(
+    alert: MutableState<Boolean>,
+    perfil: List<Proveedor>,
+    perfil_selec: SnapshotStateList<String>
+) {
+    if (alert.value) {
+        AlertDialog(
+            onDismissRequest = {},
+            title = null,
+            buttons = {
+                Box(
+                    modifier = Modifier
+                        .height(60.dp)
+                        .fillMaxWidth()
+                        .background(color = colorResource(R.color.reds))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .align(Alignment.Center)
+                    ) {
+                        Icon(
+                            Icons.Filled.ArrowBack, "Hora", modifier = Modifier
+                                .align(Alignment.CenterVertically)
+                                .padding(horizontal = 10.dp)
+                                .clickable {
+                                    alert.value = false
+                                }
+                        )
+                        Text(
+                            text = "SELECCIONA EL PERFIL",
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        )
+                    }
+                }
+                LazyColumn {
+                    itemsIndexed(perfil) { index, label ->
+                        Column(modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                perfil_selec[0] = label.nombre.toString()
+                                perfil_selec[1] = label.id.toString()
+                                alert.value = false
+                            }
+                            .padding(horizontal = 20.dp, vertical = 10.dp)) {
+                            Text(text = label.nombre.toString())
+                        }
+                    }
+                }
+            },
+            properties = DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = false
+            ),
+            shape = RoundedCornerShape(15.dp)
+        )
     }
 }

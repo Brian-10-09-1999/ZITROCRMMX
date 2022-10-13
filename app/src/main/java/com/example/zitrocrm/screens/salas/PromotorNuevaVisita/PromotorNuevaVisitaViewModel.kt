@@ -29,7 +29,6 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
     //-----------------------------------------BINGO 2 - SLOTS 1-----------------------------------------------//
     //----------------------------------------ARRAY DE LA VISITA-----------------------------------------------//
     var visitaPromotor: MutableState<PromotorNuevaVisita?> = mutableStateOf(PromotorNuevaVisita())
-
     //-----------------------------------------VISITA PROMOTORES-----------------------------------------------//
     val fecha = mutableStateOf("")
     val hora_entrada = mutableStateOf("")
@@ -79,7 +78,6 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         paqueteria_familia[1] = "0"
         isRotated.value = !isRotated.value
     }
-
     //---------------------------------------ACUMULADOS BINGO--------------------------------------------------//
     fun addAcumulados(
         proveedor_info: SnapshotStateList<String>,
@@ -113,7 +111,6 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                 premio = premi
             )
         )
-        a()
         proveedor_info[1] = "0"
         proveedor_info[0] = ""
         inicio.value = ""
@@ -122,14 +119,11 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         hora_inicio.value = ""
         hora_fin.value = ""
         premio.value = ""
-        diferencia.value = ""
+        diferencia.value = "";a()
     }
-
     fun removeAcumulados(item: Acumulados) {
-        visitaPromotor.value!!.acumulados.remove(item)
-        a()
+        visitaPromotor.value!!.acumulados.remove(item);a()
     }
-
     //--------------------------------------LO MAS JUGADO ZITRO Y COMPETENCIA----------------------------------------//
     fun addZitroyComp(
         unidadOcupacion: MutableState<String>,
@@ -167,7 +161,6 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                 unidadOcupacion = unidadOcupacion.value
             )
         )
-        a()
         apuestas_promedio.value = ""
         producto_paqueteria[1] = "0"
         producto_paqueteria[0] = ""
@@ -185,17 +178,19 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         sap2.value = false
         zona_nofumar.value = false
         zona_fumar.value = false
-        isRotated.value = !isRotated.value
+        isRotated.value = !isRotated.value;a()
     }
+    fun removeMasJugados(item: MasJugado) {
+        visitaPromotor.value!!.masJugado.remove(item);a()
+    }
+    //---------------------------------------------------------------------------------------------//
 
-
-    var positivo = mutableStateOf(true)
-    var negativo = mutableStateOf(false)
     var positivo2 = mutableStateOf(true)
     var negativo2 = mutableStateOf(false)
     var tipo = mutableStateOf(false)
     val objetivoSemanal = mutableStateListOf<Message>()
     val juegosFilter = mutableStateListOf<Juegos>()
+    val juegosZt = mutableStateListOf<Juegos>()
     val foliostecnicossalas: MutableList<rows> = arrayListOf()
 
     var dataProvedorOcupacion = mutableStateListOf<Ocupacion>()
@@ -203,20 +198,6 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
     val proveedores_selections: MutableList<Rows> = arrayListOf()
     val proveedorObservacionesCompetencia: MutableList<Rows> = arrayListOf()
     val proveedorService = mutableStateListOf<Rows>()
-
-    /**ACUMULADOS BINGO**/
-    val dataAcumuladosBingo: MutableList<Acumulados> = arrayListOf()
-
-    /**COMENTARIOS GENERALES JUGADORES**/
-    var calificacion_comentarios = mutableStateOf(true)
-    var juego_comentarios = mutableStateOf("")
-    var id_juego_comentarios = mutableStateOf(0)
-    var perfil_comentarios = mutableStateOf("")
-    var id_perfil = mutableStateOf(0)
-    var procedencia_comentarios = mutableStateOf("")
-    var ingresos_comentarios = mutableStateOf("")
-    var comentarios_jugadores = mutableStateOf("")
-    val dataComentariosGeneralesJugadores: MutableList<Comentarios> = arrayListOf()
 
     /**COMENTARIOS SONIDOS NUESTRAS MAQUINAS, ZITRO COMPETENCIA**/
     var calificacion_sonido = mutableStateOf(true)
@@ -234,8 +215,7 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
     /**VISITA PROMOTORES**/
     val networkstate = mutableStateOf("")
     val networkstate_ID = mutableStateOf(0)
-    var cards =
-        mutableListOf<Boolean>(false, false, false, false, false, false, false, false, false, false)
+    var cards = mutableListOf<Boolean>(false, false, false, false, false, false, false, false, false, false)
 
     fun cardsexp(ind: Int) {
         cards.forEachIndexed { index, it ->
@@ -258,8 +238,6 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         //visita.value!!.tipo = 0
         dataProvedorOcupacion.clear()
         dataProvedorOcupacionSlots.clear()
-        dataAcumuladosBingo.clear()
-        dataComentariosGeneralesJugadores.clear()
         addSonido.clear()
         dataObservacionesCompetencia.clear()
         alertDetalleSave.value = true
@@ -473,48 +451,6 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
             }
         }
     }
-
-    /**COMENTARIOS GENERALES JUGADORES**/
-    fun selectJuegoComentGeneralesJugadores(id: Int, nombre: String) {
-        alertJuegosComentariosJugadores.value = false
-        juego_comentarios.value = nombre
-        id_juego_comentarios.value = id
-    }
-
-    fun addComentGeneralsJugadores() {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                dataComentariosGeneralesJugadores.add(
-                    Comentarios(
-                        juego = ID(id_juego_comentarios.value, juego_comentarios.value),
-                        procedencia = procedencia_comentarios.value,
-                        ingresos = ingresos_comentarios.value.toInt(),
-                        comentario = comentarios_jugadores.value,
-                        perfil = ID(id_perfil.value, perfil_comentarios.value),
-                        tipo = calificacion_comentarios.value
-                    )
-                )
-                positivo.value = true
-                negativo.value = false
-                calificacion_comentarios.value = true
-
-                id_juego_comentarios.value = 0
-                juego_comentarios.value = ""
-                perfil_comentarios.value = ""
-                id_perfil.value = 0
-                procedencia_comentarios.value = ""
-                ingresos_comentarios.value = ""
-                comentarios_jugadores.value = ""
-
-                Log.d("Success", "COMENTARIOS GENERALES ARRAY" + dataComentariosGeneralesJugadores)
-
-
-            } catch (e: Exception) {
-                Log.d("Exception", "COMENTARIOS GENERALES", e)
-            }
-        }
-    }
-
     /**OBSERVACIONES DE LA COMPETENCIA**/
     fun selectProvedorObservaciones(id: Int, nombre: String) {
         alertObservacionesCompetecia.value = false
@@ -597,6 +533,7 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             objetivoSemanal.clear()
             juegosFilter.clear()
+            juegosZt.clear()
             proveedorService.clear()
             val authService = RetrofitHelper.getAuthService()
             try {
@@ -609,8 +546,9 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                     alertdialog(2, "No se obtuvo objetivo semanal")
                     delay(2000)
                 }
-                //-------------------------------------------JUEGOS ZITRO---------------------------------------------------//
-                val responseService2 = authService.getJuegosZitro(token, tipoId, tipoId)
+                //-------------------------------------------JUEGOS ZITRO---------------------------------------------------//}
+                val clasifi = if(tipoId==1) 2 else 1
+                val responseService2 = authService.getJuegosZitro(token = token, tipo = tipoId, clasificacion = null)
                 if (responseService2.isSuccessful) {
                     juegosFilter += responseService2.body()!!.juegos
                 } else {

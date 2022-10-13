@@ -184,12 +184,9 @@ fun DisplayAlert(
             shape = dialogShape
         )
     }*/
-    if (alertJuegosComentariosJugadores.value) {
+    /*if (alertJuegosComentariosJugadores.value) {
         AlertDialog(
-            onDismissRequest = {
-                onDialogStateChange?.invoke(false)
-                onDismissRequest?.invoke()
-            },
+            onDismissRequest = {},
             title = null,
             buttons = {
                 Box(
@@ -218,7 +215,7 @@ fun DisplayAlert(
                         )
                     }
                 }
-                LazyColumn() {
+                LazyColumn {
                     itemsIndexed(viewModel.juegosFilter) { index, label ->
                         Column(modifier = Modifier
                             .fillMaxWidth()
@@ -233,22 +230,6 @@ fun DisplayAlert(
                             Text(text = label.nombre.toString())
                         }
                     }
-                    /*item {
-                        viewModel.juegosFilter.forEach { label ->
-                            Column(modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    navController.popBackStack()
-                                    viewModel.selectJuegoComentGeneralesJugadores(
-                                        id = label.id!!,
-                                        nombre = label.nombre!!,
-                                    )
-                                }
-                                .padding(horizontal = 20.dp, vertical = 10.dp)) {
-                                Text(text = label.nombre.toString())
-                            }
-                        }
-                    }*/
                 }
             },
             properties = DialogProperties(
@@ -258,7 +239,7 @@ fun DisplayAlert(
             modifier = modifier,
             shape = dialogShape
         )
-    }
+    }*/
     if (alertProveedorSonido.value) {
         AlertDialog(
             onDismissRequest = {

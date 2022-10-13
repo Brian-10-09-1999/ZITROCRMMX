@@ -10,6 +10,6 @@ data class Comentarios (
   @SerializedName("procedencia"   ) var procedencia   : String?  = null,
   @SerializedName("ingresos"      ) var ingresos      : Int?     = null,
   @SerializedName("comentario"    ) var comentario    : String?  = null,
-  @SerializedName("tipo"          ) var tipo          : Boolean? = null
+  @SerializedName("tipo"          ) var tipo          : Boolean? = false
 
 )

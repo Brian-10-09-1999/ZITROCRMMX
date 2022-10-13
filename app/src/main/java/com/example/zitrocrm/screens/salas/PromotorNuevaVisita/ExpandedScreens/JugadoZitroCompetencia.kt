@@ -63,25 +63,26 @@ fun JugadoZitroCompetencia(
     tipo: MutableState<Boolean>
 ) {
     val alert_proveedor = remember { mutableStateOf(false) }
-    val proveedor_info = remember { mutableStateListOf("", "0","0") }
+    val proveedor_info = remember { mutableStateListOf("", "0", "0") }
     val alert = remember { mutableStateOf(false) }
     val producto_paqueteria = remember { mutableStateListOf("", "0") }
-    val zona = remember{ mutableStateListOf<Zona>() }
-    val zona_fumar = remember{ mutableStateOf(false)}
-    val zona_nofumar = remember{ mutableStateOf(false)}
+    val zona = remember { mutableStateListOf<Zona>() }
+    val zona_fumar = remember { mutableStateOf(false) }
+    val zona_nofumar = remember { mutableStateOf(false) }
     val context = LocalContext.current
-    val tiro_minimo = remember{ mutableStateOf("") }
-    val tiro_maximo = remember{ mutableStateOf("") }
-    val tiro_promedio = remember{ mutableStateOf("") }
+    val tiro_minimo = remember { mutableStateOf("") }
+    val tiro_maximo = remember { mutableStateOf("") }
+    val tiro_promedio = remember { mutableStateOf("") }
     val apuestas_promedio = remember { mutableStateOf("") }
-    val promedio_ocupacion = remember{ mutableStateOf("") }
-    val unidadOcupacion = remember{ mutableStateOf("") }
+    val promedio_ocupacion = remember { mutableStateOf("") }
+    val unidadOcupacion = remember { mutableStateOf("") }
     var formatexpanded = remember { mutableStateOf(false) }
     val format_hr_min = listOf("Hr", "Min")
-    val progresivos = remember{ mutableListOf<Progresivos>() }
-    val sap2 = remember{mutableStateOf(false)}
-    val lap2 = remember{mutableStateOf(false)}
-    val icon = if (alert_proveedor.value) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown
+    val progresivos = remember { mutableListOf<Progresivos>() }
+    val sap2 = remember { mutableStateOf(false) }
+    val lap2 = remember { mutableStateOf(false) }
+    val icon =
+        if (alert_proveedor.value) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown
     val icon2 = if (alert.value) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown
     val focusManager = LocalFocusManager.current
 
@@ -289,8 +290,7 @@ fun JugadoZitroCompetenciaExpand(
                                 if (viewModel.list_familia_paqueteria.isNotEmpty()) {
                                     alert.value = true
                                 }
-                            }
-                        ,
+                            },
                         label = { Text("Producto") },
                         colors = TextFieldDefaults.textFieldColors(
                             textColor = Color.White
@@ -345,8 +345,8 @@ fun JugadoZitroCompetenciaExpand(
                                 ),
                                 onCheckedChange = {
                                     zona_fumar.value = it
-                                    if(it) array_zona.add(Zona("1","Fumar"))
-                                    else array_zona.remove(Zona("1","Fumar"))
+                                    if (it) array_zona.add(Zona("1", "Fumar"))
+                                    else array_zona.remove(Zona("1", "Fumar"))
                                 }
                             )
                         }
@@ -381,8 +381,8 @@ fun JugadoZitroCompetenciaExpand(
                                 ),
                                 onCheckedChange = {
                                     zona_nofumar.value = it
-                                    if(it) array_zona.add(Zona("2","No Fumar"))
-                                    else array_zona.remove(Zona("2","No Fumar"))
+                                    if (it) array_zona.add(Zona("2", "No Fumar"))
+                                    else array_zona.remove(Zona("2", "No Fumar"))
                                 }
                             )
                         }
@@ -393,7 +393,7 @@ fun JugadoZitroCompetenciaExpand(
                             onValueChange = {
                                 if (viewModel.getValidationSum(it)) tiro_minimo.value = it
                                 else tiro_minimo.value = ""
-                                            },
+                            },
                             label = { Text("Tiro Minimo") },
                             modifier = Modifier.fillMaxWidth(.5f),
                             keyboardOptions = KeyboardOptions.Default.copy(
@@ -419,7 +419,7 @@ fun JugadoZitroCompetenciaExpand(
                             onValueChange = {
                                 if (viewModel.getValidationSum(it)) tiro_maximo.value = it
                                 else tiro_maximo.value = ""
-                                            },
+                            },
                             label = { Text("Tiro Maximo") },
                             modifier = Modifier.fillMaxWidth(),
                             keyboardOptions = KeyboardOptions.Default.copy(
@@ -445,7 +445,7 @@ fun JugadoZitroCompetenciaExpand(
                         onValueChange = {
                             if (viewModel.getValidationSum(it)) tiro_promedio.value = it
                             else tiro_promedio.value = ""
-                                        },
+                        },
                         label = { Text("Tiro Promedio") },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions.Default.copy(
@@ -533,7 +533,9 @@ fun JugadoZitroCompetenciaExpand(
                             label = { Text("Hr/Min") },
                             trailingIcon = {
                                 Icon(icon, "contentDescription",
-                                    Modifier.clickable { formatexpanded.value = !formatexpanded.value })
+                                    Modifier.clickable {
+                                        formatexpanded.value = !formatexpanded.value
+                                    })
                             },
                             colors = TextFieldDefaults.textFieldColors(
                                 textColor = Color.White
@@ -543,7 +545,9 @@ fun JugadoZitroCompetenciaExpand(
                     DropdownMenu(
                         expanded = formatexpanded.value,
                         onDismissRequest = { formatexpanded.value = false },
-                        modifier = Modifier.padding(horizontal = 10.dp).fillMaxWidth()
+                        modifier = Modifier
+                            .padding(horizontal = 10.dp)
+                            .fillMaxWidth()
                     ) {
                         format_hr_min.forEach { label ->
                             DropdownMenuItem(onClick = {
@@ -594,10 +598,10 @@ fun JugadoZitroCompetenciaExpand(
                                 ),
                                 onCheckedChange = {
                                     sap2.value = it
-                                    if(it){
-                                        progresivos.add(Progresivos("1","Sap"))
-                                    }else{
-                                        progresivos.remove(Progresivos("1","Sap"))
+                                    if (it) {
+                                        progresivos.add(Progresivos("1", "Sap"))
+                                    } else {
+                                        progresivos.remove(Progresivos("1", "Sap"))
                                     }
                                 }
                             )
@@ -633,10 +637,10 @@ fun JugadoZitroCompetenciaExpand(
                                 ),
                                 onCheckedChange = {
                                     lap2.value = it
-                                    if(it){
-                                        progresivos.add(Progresivos("2","Sap"))
-                                    }else{
-                                        progresivos.remove(Progresivos("2","Sap"))
+                                    if (it) {
+                                        progresivos.add(Progresivos("2", "Lap"))
+                                    } else {
+                                        progresivos.remove(Progresivos("2", "Lap"))
                                     }
                                 }
                             )
@@ -652,7 +656,7 @@ fun JugadoZitroCompetenciaExpand(
                         unidadOcupacion.value.isNotBlank()
                                 && apuestas_promedio.value.isNotBlank()
                                 && proveedor_info[0].isNotBlank()
-                                && proveedor_info[1].toInt()>0
+                                && proveedor_info[1].toInt() > 0
                                 && tiro_minimo.value.isNotBlank()
                                 && tiro_maximo.value.isNotBlank()
                                 && tiro_promedio.value.isNotBlank()
@@ -709,10 +713,10 @@ fun JugadoZitroCompetenciaExpand(
 }
 
 
-
 @Composable
 fun DataItemMasjugado(
-    item: MasJugado
+    item: MasJugado,
+    viewModelNV: PromotorNuevaVisitaViewModel
 ) {
     var expandcards by remember {
         mutableStateOf(false)
@@ -768,7 +772,7 @@ fun DataItemMasjugado(
                                     bottom = 15.dp
                                 )
                             )
-                            if(item.zona.isNotEmpty()){
+                            if (item.zona.isNotEmpty()) {
                                 item.zona.forEach {
                                     Text(
                                         text = "Zona: ${it.zona}",
@@ -780,7 +784,7 @@ fun DataItemMasjugado(
                                     )
                                 }
                             }
-                            if(item.progresivos.isNotEmpty()){
+                            if (item.progresivos.isNotEmpty()) {
                                 item.progresivos.forEach {
                                     Text(
                                         text = "Progresivos: ${it.progresivos}",
@@ -798,7 +802,7 @@ fun DataItemMasjugado(
                 }
             }
             IconButton(onClick = {
-                //viewModelNV.removeAcumulados(item)
+                viewModelNV.removeMasJugados(item)
             }) {
                 Icon(
                     imageVector = Icons.Filled.Delete,
@@ -816,8 +820,8 @@ fun AlertPaqueteria(
     proveedor_info: SnapshotStateList<String>,
     tipo: MutableState<Boolean>,
     paqueteria_familia: SnapshotStateList<String>,
-){
-    if(alert.value) {
+) {
+    if (alert.value) {
         AlertDialog(
             onDismissRequest = {},
             title = null,

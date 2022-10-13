@@ -32,6 +32,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import com.example.zitrocrm.R
 import com.example.zitrocrm.network.models_dto.DetalleOcupacionDto.Acumulados
+import com.example.zitrocrm.network.models_dto.DetalleOcupacionDto.Comentarios
 import com.example.zitrocrm.network.models_dto.DetalleOcupacionDto.MasJugado
 import com.example.zitrocrm.network.models_dto.DetalleOcupacionDto.Visita
 import com.example.zitrocrm.network.models_dto.Filter.FilterViewModel
@@ -62,6 +63,7 @@ fun PromotorNewScreenn(
     val visita = viewModelNV.visitaPromotor.value!!.visita!!
     val acumulados = viewModelNV.visitaPromotor.value!!.acumulados
     val mas_jugado = viewModelNV.visitaPromotor.value!!.masJugado
+    val coment_generales = viewModelNV.visitaPromotor.value!!.comentarios
     val tipo = viewModelNV.tipo
     val act = viewModelNV.a.value
     val colorbingo by animateColorAsState(when (tipo.value) {true -> Color.White false -> Color.Green })
@@ -109,7 +111,8 @@ fun PromotorNewScreenn(
                 token = token,
                 visita = visita,
                 acumulados = acumulados,
-                mas_jugado = mas_jugado
+                mas_jugado = mas_jugado,
+                coment_generales = coment_generales
             )
         }
     }
@@ -221,6 +224,7 @@ fun ContentNuevaVisita(
     visita: Visita,
     acumulados: ArrayList<Acumulados>,
     mas_jugado: ArrayList<MasJugado>,
+    coment_generales: ArrayList<Comentarios>,
 ) {
     Scaffold {
         AlertEnvio(viewModelNV)
@@ -329,7 +333,7 @@ fun ContentNuevaVisita(
                 }
                 //-----ARRAY MAS JUGADO-----//
                 itemsIndexed(mas_jugado){index,item->
-                    DataItemMasjugado(item)
+                    DataItemMasjugado(item,viewModelNV)
                 }
             }
             //COMENTARIOS GENERALES JUGADORES
@@ -337,8 +341,18 @@ fun ContentNuevaVisita(
                 ComentariosGeneralesJugadores(
                     card6 = "Comentarios Generales Jugadores",
                     onCardArrowClick = { viewModelNV.cardsexp(5) },
-                    expanded = cards[5], viewModelNV, navController
+                    expanded = cards[5],
+                    viewModel = viewModelNV,
+                    coment_generales = coment_generales
                 )
+            }
+            if(cards[5]&&coment_generales.isNotEmpty()){
+                item {
+                    ItemsTittle("Lo Más Jugado Generados")
+                }
+                itemsIndexed(coment_generales){index,item->
+                    ItemComentariosG(item)
+                }
             }
             //COMENTARIOS DE SONIDO MAQUINAS Y PROVEEDORES CERCANOS
             item {
@@ -375,7 +389,7 @@ fun ContentNuevaVisita(
                         && viewModelNV.dataProvedorOcupacionSlots.isNotEmpty()
                         //&& viewModelNV.dataLoMasJugadoZitroZomp.isNotEmpty()
                         && viewModelNV.addSonido.isNotEmpty()
-                        && viewModelNV.dataComentariosGeneralesJugadores.isNotEmpty()
+                        //&& viewModelNV.dataComentariosGeneralesJugadores.isNotEmpty()
             }
             item {
                 Spacer(Modifier.height(10.dp))

@@ -89,7 +89,7 @@ fun LoginScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(horizontal = 30.dp, vertical = 10.dp)
-                            .background(color = blacktransp),
+                            ,
                     ) {
                         Spacer(Modifier.fillMaxHeight(.1f))
                         Text(
