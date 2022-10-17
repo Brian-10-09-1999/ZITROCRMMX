@@ -4,7 +4,7 @@ import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.GetVisita.RowsD
 import com.google.gson.annotations.SerializedName
 
 
-data class PromotorNuevaVisita (
+data class  PromotorNuevaVisita (
 
   @SerializedName("visita"                   ) var visita                   : Visita?                             = Visita(),
   @SerializedName("ocupacion"                ) var ocupacion                : ArrayList<Ocupacion>                = arrayListOf(),
@@ -13,6 +13,8 @@ data class PromotorNuevaVisita (
   @SerializedName("masJugado"                ) var masJugado                : ArrayList<MasJugado>                = arrayListOf(),
   @SerializedName("comentariosGenerales"     ) var comentarios              : ArrayList<Comentarios>              = arrayListOf(),
   @SerializedName("comentariosSonido"        ) var comentariosSonido        : ArrayList<Sonido>                   = arrayListOf(),
-  @SerializedName("observacionesCompetencia" ) var observacionesCompetencia : ArrayList<ObservacionesCompetencia> = arrayListOf()
+  @SerializedName("observacionesCompetencia" ) var observacionesCompetencia : ArrayList<ObservacionesCompetencia> = arrayListOf(),
+  @SerializedName("objetivos"                ) var objetivos                : ArrayList<Int>                      = arrayListOf(),
+  @SerializedName("librerias"                ) var librerias                : ArrayList<Int>                      = arrayListOf()
 
 )

@@ -187,9 +187,15 @@ fun TopAppBarNuevaVisita(
                             tipo.value = it
                             when (it) {
                                 true -> {
+                                    viewModelNV.objetivoSemanalSelec.clear()
+                                    viewModelNV.objetivoSemanalFilter.clear()
+                                    viewModelNV.juegosObjetivo.clear()
                                     viewModelNV.getNuevaVisitaFilters(token, 1)
                                 }
                                 false -> {
+                                    viewModelNV.objetivoSemanalSelec.clear()
+                                    viewModelNV.objetivoSemanalFilter.clear()
+                                    viewModelNV.juegosObjetivo.clear()
                                     viewModelNV.getNuevaVisitaFilters(token, 2)
                                 }
                             }
@@ -246,6 +252,7 @@ fun ContentNuevaVisita(
 
 //----------------------------------VISITA PROMOTORES-------------------------------------------
             item {
+                val objetivoSemJuego = viewModelNV.juegosObjetivo
                 VisitaPromotoresCard(
                     card = "Visita Promotores",
                     onCardArrowClick = {
@@ -254,8 +261,8 @@ fun ContentNuevaVisita(
                     expanded = cards[0],
                     viewModelPromotorNuevaVisita = viewModelNV,
                     visita = visita,
-                    objetivoSemanaal = viewModelNV.objetivoSemanaal,
-                    context = context
+                    context = context,
+                    objetivoSemJuego = objetivoSemJuego
                 )
             }
 

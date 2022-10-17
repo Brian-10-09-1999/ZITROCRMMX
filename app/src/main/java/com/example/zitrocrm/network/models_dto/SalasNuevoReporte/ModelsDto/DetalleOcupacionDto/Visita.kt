@@ -17,6 +17,7 @@ data class Visita (
   @SerializedName("queHacer"              ) var queHacer               : String?  = "",
   @SerializedName("salaid"                ) var salaid                 : Int?     = 0,
   @SerializedName("tipo"                  ) var tipo                   : Int?     = 0,
+  @SerializedName("elabLayout"            ) var elabLayout             : Int?     = 0,
 
   )
 

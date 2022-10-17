@@ -34,12 +34,33 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
     val fecha = mutableStateOf("")
     val hora_entrada = mutableStateOf("")
     val hora_salida = mutableStateOf("")
-    val objetivoSemanaal = mutableStateOf("")
+
+    var tipo = mutableStateOf(false)
+    val objetivoSemanal = mutableStateListOf<Message>()
+    val juegosObjetivo = mutableStateListOf<Message>()
+    val objetivoSemanalFilter = mutableStateListOf<Message>()
+    val objetivoSemanalSelec = mutableStateListOf<Message>()
+
     var listHorarios = mutableStateListOf<Horarios>()
     fun texthours(): String {
         var text = ""
         listHorarios.forEach { item -> text = "${text}${item.horario}," }
         return text
+    }
+    fun getObjetivoString(): String {
+        var obj = ""
+        juegosObjetivo.filter { it.check == true }.forEach {
+            obj = obj + "${it.objetivo}, "
+        }
+        return obj
+    }
+
+    fun getObjetSelect():String{
+        var obj = ""
+        objetivoSemanal.filter { it.check == true }.forEach {
+            obj = obj+"${it.objetivo}, "
+        }
+        return obj
     }
 
     //---------------------------------------DETALLE DE OCUPACION---------------------------------------------//
@@ -52,6 +73,10 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
     ) {
         val juego = if (paqueteria_familia[0].isBlank()) null else paqueteria_familia[0]
         val juegoidfk = if (paqueteria_familia[1].isBlank()) null else paqueteria_familia[1]
+        val listHorarioss = mutableStateListOf<Horarios>()
+        listHorarios.forEach {
+            listHorarioss.add(it)
+        }
         listdetalleOcu.add(
             RowsDO2(
                 proveedor = proveedor_info[0],
@@ -62,10 +87,19 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                 maquinas1 = 0,
                 maquinasLt1 = 0,
                 total = 0,
-                horarios = ArrayList<Horarios>(/*viewModel_PNV.listHorarios*/),
+                horarios = ArrayList<Horarios>(/*listHorarioss*/),
             )
         )
-        proveedores_selections.add(
+        if (proveedor_info[1].toInt() != 24 || proveedor_info[1].toInt() != 97) {
+            proveedores_selections.add(
+                Rows(
+                    nombre = proveedor_info[0],
+                    id = proveedor_info[1].toInt(),
+                    tipo = proveedor_info[2].toInt()
+                )
+            )
+        }
+        proveedores_selections_todos.add(
             Rows(
                 nombre = proveedor_info[0],
                 id = proveedor_info[1].toInt(),
@@ -78,6 +112,10 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         paqueteria_familia[0] = ""
         paqueteria_familia[1] = "0"
         isRotated.value = !isRotated.value
+    }
+
+    fun removeOcupacion(item: RowsDO2) {
+        listdetalleOcu.remove(item);a()
     }
 
     //---------------------------------------ACUMULADOS BINGO--------------------------------------------------//
@@ -280,37 +318,26 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         visitaPromotor.value!!.observacionesCompetencia.remove(item);a()
     }
 
-
-    var tipo = mutableStateOf(false)
-    val objetivoSemanal = mutableStateListOf<Message>()
     val juegosFilter = mutableStateListOf<Juegos>()
     val foliostecnicossalas: MutableList<rows> = arrayListOf()
 
     var dataProvedorOcupacion = mutableStateListOf<Ocupacion>()
     val dataProvedorOcupacionSlots = mutableStateListOf<OcupacionSlots>()
-    val proveedores_selections: MutableList<Rows> = arrayListOf()
-    val proveedorObservacionesCompetencia: MutableList<Rows> = arrayListOf()
+    val proveedores_selections = mutableStateListOf<Rows>()
+    val proveedores_selections_todos = mutableStateListOf<Rows>()
     val proveedorService = mutableStateListOf<Rows>()
 
     /**VISITA PROMOTORES**/
     val networkstate = mutableStateOf("")
     val networkstate_ID = mutableStateOf(0)
-    var cards = mutableListOf<Boolean>(false, false, false, false, false, false, false, false, false, false)
+    var cards =
+        mutableListOf<Boolean>(false, false, false, false, false, false, false, false, false, false)
 
     fun cardsexp(ind: Int) {
         cards.forEachIndexed { index, it ->
-            if (index == ind) {
-                if (it == true) cards[index] = false
-                    /*cards.set(index, false)
-                    cards[index] = false*/
-                 else cards[index] = true
-                    //cards.set(index, true)
-            } else {
-                cards[index] = false
-                //cards.set(index, false)
-            }
-        }
-        a()
+            if (index == ind) if (it == true) cards[index] = false else cards[index] = true
+            else cards[index] = false
+        };a()
     }
 
     fun cleanReport() {
@@ -330,21 +357,23 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             val authService = RetrofitHelper.getAuthService()
             try {
+                objetivoSemanal.filter { it.check == true }.forEach { visitaPromotor.value!!.objetivos.add(it.id!!.toInt()) }
                 visitaPromotor.value!!.visita!!.salaid = salaid.toInt()
+                juegosObjetivo.filter { it.check == true }.forEach { visitaPromotor.value!!.librerias.add(it.id!!.toInt()) }
                 listdetalleOcu.forEach {
                     if (it.tipo == 1) {
                         it.horarios.forEach { hora ->
                             visitaPromotor.value!!.ocupacionSlots.add(
                                 OcupacionSlots(
-                                    horario = if(hora.horario!!.isBlank()) null else hora.horario!!.toInt(),
-                                    juegoidfk =if(it.juegoidfk==0) null else it.juegoidfk,
-                                    maquinas1 = it.maquinas1,
-                                    ocupacionMaquinas1 = if(hora.ocupacion1=="") null else hora.ocupacionLt1!!.toInt(),
+                                    horario = if (hora.horario!!.isBlank()) null else hora.horario!!.toInt(),
+                                    juegoidfk = if (it.juegoidfk == 0) null else it.juegoidfk,
+                                    maquinas1 = it.maquinasLt1,
+                                    ocupacionMaquinas1 = if (hora.ocupacionLt1 == "") null else hora.ocupacionLt1!!.toInt(),
                                     proveedoridfk = it.proveedoridfk,
-                                    subjuegoidfk = if(it.subjuegoidfk==0)null else it.subjuegoidfk,
+                                    subjuegoidfk = if (it.subjuegoidfk == 0) null else it.subjuegoidfk,
                                     proveedor = it.proveedor,
-                                    juego =if(it.juego!!.isBlank())null else it.juego,
-                                    subjuego = if(it.subjuego!!.isBlank())null else it.subjuego
+                                    juego = it.juego,
+                                    subjuego = it.subjuego
                                 )
                             )
                         }
@@ -352,26 +381,25 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                         it.horarios.forEach { hora ->
                             visitaPromotor.value!!.ocupacion.add(
                                 Ocupacion(
-                                    horario = if(hora.horario!!.isBlank()) null else hora.horario!!.toInt(),
-                                    juegoidfk = if(it.juegoidfk==0) null else it.juegoidfk,
+                                    horario = if (hora.horario!!.isBlank()) null else hora.horario!!.toInt(),
+                                    juegoidfk = if (it.juegoidfk == 0) null else it.juegoidfk,
                                     maquinas1 = it.maquinas1,
                                     maquinasLt1 = it.maquinasLt1,
-                                    ocupacionMaquinas1 = if(hora.ocupacion1!!.isBlank()) null else hora.ocupacion1!!.toInt(),
-                                    ocupacionMaquinaslt1 = if(hora.ocupacionLt1!!.isBlank()) null else hora.ocupacionLt1!!.toInt(),
+                                    ocupacionMaquinas1 = if (hora.ocupacion1!!.isBlank()) null else hora.ocupacion1!!.toInt(),
+                                    ocupacionMaquinaslt1 = if (hora.ocupacionLt1!!.isBlank()) null else hora.ocupacionLt1!!.toInt(),
                                     proveedoridfk = it.proveedoridfk,
-                                    subjuegoidfk = if(it.subjuegoidfk==0)null else it.subjuegoidfk,
+                                    subjuegoidfk = if (it.subjuegoidfk == 0) null else it.subjuegoidfk,
                                     proveedor = it.proveedor,
-                                    juego = if(it.juego!!.isBlank())null else it.juego,
-                                    subjuego = if(it.subjuego!!.isBlank())null else it.subjuego
+                                    juego = it.juego,
+                                    subjuego = it.subjuego
                                 )
                             )
                         }
                     }
                 }
-
                 alertdialog(1, "")
                 val responseService = authService.postSalaVisitaPromotores(
-                    token = token,visitaPromotor.value!!
+                    token = token, visitaPromotor.value!!
                 )
                 if (responseService.isSuccessful) {
                     networkstate_ID.value = responseService.body()!!.message!!.id!!.toInt()
@@ -564,6 +592,21 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
     }
 
     //-----------------------------------------------------------FUN API GET FILTROS DE NUEVA VISITA--------------------------------------------------------//
+
+    fun check_bingo(items: Message) {
+        if (items.check!! && objetivoSemanalFilter.filter { it.juegoidfk == items.id }.isEmpty()) objetivoSemanalFilter += objetivoSemanal.filter { it.juegoidfk == items.id }
+        else objetivoSemanalFilter.filter { it.juegoidfk == items.id }.forEach {
+            objetivoSemanalFilter.remove(
+                Message(
+                    id = it.id,
+                    objetivo = it.objetivo,
+                    check = it.check,
+                    juegoidfk = it.juegoidfk
+                )
+            )
+        };a()
+    }
+
     fun getNuevaVisitaFilters(token: String, tipoId: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             objetivoSemanal.clear()
@@ -573,17 +616,48 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
             try {
                 alertdialog(1, "")
                 //------------------------------------------OBJETIVO SEMANAL-------------------------------------------------//
-                val responseService = authService.getObjSemanal(token, tipoId)
-                if (responseService.ok!!) {
-                    objetivoSemanal += responseService.message
+                val responseServicee =
+                    authService.getObjSemanal(
+                        token = token,
+                        tipoId = tipoId
+                    )
+                if (responseServicee.ok!!) {
+                    objetivoSemanal += responseServicee.message
                 } else {
                     alertdialog(2, "No se obtuvo objetivo semanal")
                     delay(2000)
                 }
+
+                if (tipoId == 2) {
+                    val clasifi = if (tipoId == 1) 2 else 1
+                    val responseService =
+                        authService.getJuegosZitro(
+                            token = token,
+                            tipo = tipoId,
+                            clasificacion = clasifi
+                        )
+                    if (responseService.body()!!.ok!!) {
+                        responseService.body()!!.juegos.forEach { itt->
+                            if(juegosObjetivo.filter { it.objetivo == itt.nombre }.isEmpty()){
+                                juegosObjetivo.add(
+                                    Message(id = itt.id, objetivo = itt.nombre, check = false, juegoidfk = 0)
+                                )
+                            }
+                        }
+                    } else {
+                        alertdialog(2, "No se obtuvo objetivo semanal")
+                        delay(2000)
+                    }
+                }
+
                 //-------------------------------------------JUEGOS ZITRO---------------------------------------------------//}
-                val clasifi = if (tipoId == 1) 2 else 1
+
                 val responseService2 =
-                    authService.getJuegosZitro(token = token, tipo = tipoId, clasificacion = null)
+                    authService.getJuegosZitro(
+                        token = token,
+                        tipo = tipoId,
+                        clasificacion = null
+                    )
                 if (responseService2.isSuccessful) {
                     juegosFilter += responseService2.body()!!.juegos
                 } else {

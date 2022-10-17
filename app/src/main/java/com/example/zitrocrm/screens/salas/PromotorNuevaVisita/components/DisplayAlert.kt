@@ -44,7 +44,7 @@ fun DisplayAlert(
     onDismissRequest: (() -> Unit)? = null,
     navController: NavController
 ) {
-    val dialogShape = RoundedCornerShape(18.dp)
+    /*val dialogShape = RoundedCornerShape(18.dp)
 
     if (alertProveedorLoMasJugado.value) {
         AlertDialog(
@@ -483,5 +483,5 @@ fun DisplayAlert(
             modifier = modifier,
             shape = dialogShape
         )
-    }*/
+    }*/*/
 }

@@ -18,7 +18,10 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -33,6 +36,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.example.zitrocrm.R
 import com.example.zitrocrm.network.models_dto.DetalleOcupacionDto.Fecha
 import com.example.zitrocrm.network.models_dto.DetalleOcupacionDto.Visita
+import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.ObjSemanalFilter.Message
 import com.example.zitrocrm.screens.salas.*
 import com.example.zitrocrm.screens.salas.PromotorNuevaVisita.PromotorNuevaVisitaViewModel
 import com.example.zitrocrm.ui.theme.blackdark
@@ -48,8 +52,8 @@ fun VisitaPromotoresCard(
     expanded: Boolean,
     viewModelPromotorNuevaVisita: PromotorNuevaVisitaViewModel,
     visita: Visita,
-    objetivoSemanaal: MutableState<String>,
     context: Context,
+    objetivoSemJuego: SnapshotStateList<Message>,
 ) {
     Column(
         modifier = Modifier
@@ -136,8 +140,8 @@ fun VisitaPromotoresCard(
                 expanded = expanded,
                 viewModelNV = viewModelPromotorNuevaVisita,
                 visita = visita,
-                objetivoSemanaal = objetivoSemanaal,
-                context = context
+                context = context,
+                objetivoSemJuego = objetivoSemJuego
             )
         }
     }
@@ -149,10 +153,10 @@ fun VisitaPromotoresExpand(
     expanded: Boolean = true,
     viewModelNV: PromotorNuevaVisitaViewModel,
     visita: Visita,
-    objetivoSemanaal: MutableState<String>,
     context: Context,
+    objetivoSemJuego: SnapshotStateList<Message>,
 ) {
-    val expand = remember { mutableStateOf(false) }
+    val expand = remember { mutableStateOf(0) }
     val icon = if (expanded) Icons.Filled.KeyboardArrowUp
     else Icons.Filled.KeyboardArrowDown
     val fecha = viewModelNV.fecha
@@ -333,23 +337,40 @@ fun VisitaPromotoresExpand(
                             }
                         )
                     }
+                    if(viewModelNV.tipo.value==false){
+                        OutlinedTextField(
+                            enabled = false,
+                            value = viewModelNV.getObjetivoString(),//objetivoSemanaal.value,
+                            onValueChange = { },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 2.5.dp)
+                                .clickable {
+                                    expand.value = 2
+                                },
+                            label = { Text("Libreria") },
+                            trailingIcon = {
+                                Icon(icon, "contentDescription")
+                            },
+                            colors = TextFieldDefaults.textFieldColors(
+                                textColor = Color.White
+                            )
+                        )
+                    }
+
                     OutlinedTextField(
                         enabled = false,
-                        value = objetivoSemanaal.value,
+                        value = viewModelNV.getObjetSelect(),//objetivoSemanaal.value,
                         onValueChange = { },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 2.5.dp)
                             .clickable {
-                                expand.value = !expand.value
+                                expand.value = 1
                             },
                         label = { Text("Objetivo Semanal") },
                         trailingIcon = {
-                            Icon(icon, "contentDescription",
-                                Modifier.clickable {
-                                    expand.value = !expand.value
-                                }
-                            )
+                            Icon(icon, "contentDescription")
                         },
                         colors = TextFieldDefaults.textFieldColors(
                             textColor = Color.White
@@ -358,7 +379,7 @@ fun VisitaPromotoresExpand(
                     AlertObjetivoSemanalMenu(
                         viewModel = viewModelNV,
                         openclose = expand,
-                        objetivoSemanalString = objetivoSemanaal
+                        objetivoSemJuego = objetivoSemJuego
                     )
                 }
             }
@@ -369,13 +390,14 @@ fun VisitaPromotoresExpand(
 @Composable
 fun AlertObjetivoSemanalMenu(
     viewModel: PromotorNuevaVisitaViewModel,
-    openclose: MutableState<Boolean>,
-    objetivoSemanalString: MutableState<String>
+    openclose: MutableState<Int>,
+    objetivoSemJuego: SnapshotStateList<Message>
 ) {
-    if (openclose.value) {
+    val objetivoSemanal = if(viewModel.tipo.value)viewModel.objetivoSemanal else viewModel.objetivoSemanalFilter
+    if (openclose.value==1) {
         AlertDialog(
             onDismissRequest = {
-                openclose.value = false
+                openclose.value = 0
             },
             title = null,
             buttons = {
@@ -392,29 +414,109 @@ fun AlertObjetivoSemanalMenu(
                     ) {
                         Icon(
                             Icons.Filled.ArrowBack, "Hora", modifier = Modifier
-                                .align(Alignment.CenterVertically)
+                                .align(CenterVertically)
                                 .padding(horizontal = 10.dp)
                                 .clickable {
-                                    openclose.value = false
+                                    openclose.value = 0
                                 }
                         )
                         Text(
                             text = "SELECCIONA OBJETIVO SEMANAL",
-                            modifier = Modifier.align(Alignment.CenterVertically)
+                            modifier = Modifier.align(CenterVertically)
                         )
                     }
                 }
-                if (viewModel.objetivoSemanal.isNotEmpty()) {
+                if (objetivoSemanal.isNotEmpty()) {
                     LazyColumn {
-                        itemsIndexed(viewModel.objetivoSemanal) { index, items ->
+                        itemsIndexed(objetivoSemanal) { index, items ->
                             Column(modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable {
-                                    objetivoSemanalString.value = items.objetivo.toString()
-                                    openclose.value = false
-                                }
                                 .padding(horizontal = 20.dp, vertical = 10.dp)) {
-                                Text(text = items.objetivo.toString())
+                                Row{
+                                    val checkbox = rememberSaveable{ mutableStateOf(items.check) }
+                                    Checkbox(
+                                        checked = checkbox.value!! ,
+                                        onCheckedChange = {
+                                            items.check = it
+                                            checkbox.value = items.check
+                                            //viewModel.objetivos_seleccionados(items)
+                                            viewModel.a()
+                                        }
+                                    )
+                                    Text(text = items.objetivo.toString(),modifier=Modifier.align(CenterVertically))
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    Text(
+                        text = "Comprueba la conexion a internet",
+                        modifier = Modifier.padding(10.dp)
+                    )
+                }
+            },
+            properties = DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = false
+            ),
+            modifier = Modifier,
+            shape = RoundedCornerShape(18.dp)
+        )
+    }
+    if (openclose.value==2) {
+        AlertDialog(
+            onDismissRequest = {
+                openclose.value = 0
+            },
+            title = null,
+            buttons = {
+                Box(
+                    modifier = Modifier
+                        .height(60.dp)
+                        .fillMaxWidth()
+                        .background(color = colorResource(R.color.reds))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .align(Alignment.Center)
+                    ) {
+                        Icon(
+                            Icons.Filled.ArrowBack, "Hora", modifier = Modifier
+                                .align(CenterVertically)
+                                .padding(horizontal = 10.dp)
+                                .clickable {
+                                    openclose.value = 0
+                                }
+                        )
+                        Text(
+                            text = "SELECCIONA LIBRERIA",
+                            modifier = Modifier.align(CenterVertically)
+                        )
+                    }
+                }
+                if (objetivoSemJuego.isNotEmpty()) {
+                    LazyColumn {
+                        itemsIndexed(objetivoSemJuego) { index, items ->
+                            Column(modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp, vertical = 10.dp)) {
+                                Row{
+                                    val checkbox = rememberSaveable {
+                                        mutableStateOf(items.check)
+                                    }
+                                    Checkbox(
+                                        checked = checkbox.value!! ,
+                                        onCheckedChange = {
+                                            items.check = it
+                                            checkbox.value = items.check
+                                            viewModel.check_bingo(
+                                                items = items,
+                                            )
+                                        }
+                                    )
+                                    Text(text = items.objetivo.toString(),modifier=Modifier.align(CenterVertically))
+                                }
                             }
                         }
                     }

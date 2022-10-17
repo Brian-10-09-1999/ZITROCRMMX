@@ -620,43 +620,44 @@ fun DetalleOcupacion(
                     fontSize = 14.sp
                 )
             }
-            OutlinedTextField(
-                enabled = if (item.tipo==1) false else true,
-                value = maquinas1,
-                onValueChange = {
-                    if (viewModelNV.getValidationSum(it)) {
-                        item.maquinas1 = it.toInt()
-                    } else {
-                        item.maquinas1 = 0
-                    }
-                    maquinas1 = item.maquinas1.toString()
-                    item.total = (item.maquinas1!!.toInt() + item.maquinasLt1!!.toInt())
-                    total = item.total.toString()
-                },
-                label = { Text("Maquinas $1.00") },
-                textStyle = TextStyle(
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                ),
-                leadingIcon = {
-                    Icon(
-                        Icons.Filled.PointOfSale,
-                        "contentDescription",
-                        tint = Color.White
-                    )
-                },
-                modifier = Modifier
-                    .padding(horizontal = 5.dp, vertical = 3.dp)
-                    .fillMaxWidth(),
-                keyboardActions = KeyboardActions(onDone = {
-                    focusManager.clearFocus()
-                }),
-                keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Next,
-                    keyboardType = KeyboardType.Number
-                ),
-            )
+            if (item.tipo==2) {
+                OutlinedTextField(
+                    value = maquinas1,
+                    onValueChange = {
+                        if (viewModelNV.getValidationSum(it)) {
+                            item.maquinas1 = it.toInt()
+                        } else {
+                            item.maquinas1 = 0
+                        }
+                        maquinas1 = item.maquinas1.toString()
+                        item.total = (item.maquinas1!!.toInt() + item.maquinasLt1!!.toInt())
+                        total = item.total.toString()
+                    },
+                    label = { Text("Maquinas $1.00") },
+                    textStyle = TextStyle(
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    leadingIcon = {
+                        Icon(
+                            Icons.Filled.PointOfSale,
+                            "contentDescription",
+                            tint = Color.White
+                        )
+                    },
+                    modifier = Modifier
+                        .padding(horizontal = 5.dp, vertical = 3.dp)
+                        .fillMaxWidth(),
+                    keyboardActions = KeyboardActions(onDone = {
+                        focusManager.clearFocus()
+                    }),
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Next,
+                        keyboardType = KeyboardType.Number
+                    ),
+                )
+            }
             OutlinedTextField(
                 value = maquinaslt1,
                 onValueChange = {
@@ -731,36 +732,37 @@ fun DetalleOcupacion(
                                 modifier = Modifier.align(Alignment.CenterHorizontally)
                             )
                             Spacer(Modifier.height(3.dp))
-                            OutlinedTextField(
-                                enabled = if (item.tipo==1) false else true,
-                                value = ocu1.value,
-                                onValueChange = {
-                                    if (viewModelNV.getValidationSum(it)) {
-                                        horarios.ocupacion1 = it
-                                        if (it.toInt() > item.maquinas1!!.toInt()) {
-                                            horarios.ocupacion1 = item.maquinas1.toString()
+                            if (item.tipo==2) {
+                                OutlinedTextField(
+                                    value = ocu1.value,
+                                    onValueChange = {
+                                        if (viewModelNV.getValidationSum(it)) {
+                                            horarios.ocupacion1 = it
+                                            if (it.toInt() > item.maquinas1!!.toInt()) {
+                                                horarios.ocupacion1 = item.maquinas1.toString()
+                                            }
+                                        } else {
+                                            horarios.ocupacion1 = ""
                                         }
-                                    } else {
-                                        horarios.ocupacion1 = ""
-                                    }
-                                    ocu1.value = horarios.ocupacion1.toString()
-                                },
-                                modifier = Modifier
-                                    .width(160.dp),
-                                label = { Text("Ocupación $ 1.00") },
-                                leadingIcon = {
-                                    Icon(
-                                        Icons.Filled.PriceCheck,
-                                        "contentDescription",
-                                        tint = Color.White
+                                        ocu1.value = horarios.ocupacion1.toString()
+                                    },
+                                    modifier = Modifier
+                                        .width(160.dp),
+                                    label = { Text("Ocupación $ 1.00") },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Filled.PriceCheck,
+                                            "contentDescription",
+                                            tint = Color.White
+                                        )
+                                    },
+                                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+                                    keyboardOptions = KeyboardOptions(
+                                        imeAction = ImeAction.Next,
+                                        keyboardType = KeyboardType.Number
                                     )
-                                },
-                                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-                                keyboardOptions = KeyboardOptions(
-                                    imeAction = ImeAction.Next,
-                                    keyboardType = KeyboardType.Number
                                 )
-                            )
+                            }
                             OutlinedTextField(
                                 value = ocum1.value,
                                 onValueChange = {

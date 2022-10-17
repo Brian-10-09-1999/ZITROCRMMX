@@ -46,7 +46,7 @@ interface AuthApiService {
     : SalasFilter
 
     @GET(Val_Constants.API_FILTER_OBJETIVOS_GENERALES)
-    suspend fun getObjSemanal(
+        suspend fun getObjSemanal(
         @Header("x-token") token:String,
         @Query("tipoId") tipoId:Int)
     : ObjSemanalDto

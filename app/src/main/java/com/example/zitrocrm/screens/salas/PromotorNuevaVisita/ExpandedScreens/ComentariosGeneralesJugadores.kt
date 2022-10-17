@@ -191,6 +191,7 @@ fun ComentariosGeneralesJugadoresExpand(
                         fontSize = 16.sp
                     )
                     Spacer(Modifier.height(10.dp))
+                    //-----------------CHECKS POSITIVO Y NEGATIVO------------------------------------//
                     Row {
                         Row(
                             modifier = Modifier
@@ -260,6 +261,7 @@ fun ComentariosGeneralesJugadoresExpand(
                             )
                         }
                     }
+                    //-----------------------------SELECT JUEGO---------------------------------------------//
                     OutlinedTextField(
                         enabled = false,
                         value = paqueteria_familia[0],
@@ -276,6 +278,7 @@ fun ComentariosGeneralesJugadoresExpand(
                             textColor = Color.White
                         )
                     )
+                    //------------------------SELECT PERFIL----------------------------------//
                     OutlinedTextField(
                         enabled = false,
                         value = perfil_selec[0],
@@ -293,11 +296,13 @@ fun ComentariosGeneralesJugadoresExpand(
                             textColor = Color.White
                         )
                     )
+                    //------------------------ALERT SELECT PERFIL -----------------------------//
                     AlertJuegosPerfil(
                         alert = perfilexpanded,
                         perfil = perfil,
                         perfil_selec = perfil_selec
                     )
+                    //---------------------------PROCENDENCIA INPUT-------------------------------//
                     OutlinedTextField(
                         value = procedencia.value,
                         onValueChange = {
