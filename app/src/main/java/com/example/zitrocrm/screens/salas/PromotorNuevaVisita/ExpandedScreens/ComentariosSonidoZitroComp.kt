@@ -3,7 +3,6 @@ package com.example.zitrocrm.screens.salas.PromotorNuevaVisita.ExpandedScreens
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -15,17 +14,14 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.ThumbDown
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -35,16 +31,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.unit.toSize
-import androidx.navigation.NavController
 import com.example.zitrocrm.R
-import com.example.zitrocrm.navigation.Destination
-import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.SampleData
+import com.example.zitrocrm.network.models_dto.DetalleOcupacionDto.Sonido
 import com.example.zitrocrm.screens.salas.*
 import com.example.zitrocrm.screens.salas.PromotorNuevaVisita.PromotorNuevaVisitaViewModel
-import com.example.zitrocrm.screens.salas.PromotorNuevaVisita.components.alertProveedorSonido
 import com.example.zitrocrm.ui.theme.blackdark
-import com.example.zitrocrm.utils.Val_Constants
+import com.example.zitrocrm.ui.theme.graydark
 
 
 @ExperimentalAnimationApi
@@ -54,21 +46,11 @@ fun ComentariosSonidoZitroComp(
     card7: String,
     onCardArrowClick: () -> Unit,
     expanded: Boolean,
-    viewModelPromotorNuevaVisita: PromotorNuevaVisitaViewModel,
-    navController : NavController
+    viewModel: PromotorNuevaVisitaViewModel,
+    coment_sonido: ArrayList<Sonido>,
 ) {
-    val transitionState = remember { MutableTransitionState(expanded).apply {
-        targetState = !expanded
-    }}
-    val transition = updateTransition(targetState = transitionState, label = "transition")
-    val cardElevation by transition.animateDp({
-        tween(durationMillis = Val_Constants.ExpandAnimation)
-    }, label = "elevationTransition") {
-        if (expanded) 20.dp else 5.dp
-    }
     Card(
         backgroundColor = blackdark,
-        elevation = cardElevation,
         shape = RoundedCornerShape(15.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -87,10 +69,13 @@ fun ComentariosSonidoZitroComp(
                     Column(
                         modifier = Modifier
                             .weight(0.15f)
-                            .align(Alignment.CenterVertically)){
-                        Image(painter = painterResource(id = R.drawable.comentarios__1_),
-                            contentDescription ="IconList",
-                            modifier = Modifier.padding(start = 10.dp))
+                            .align(Alignment.CenterVertically)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.comentarios__1_),
+                            contentDescription = "IconList",
+                            modifier = Modifier.padding(start = 10.dp)
+                        )
                     }
                     Column(
                         modifier = Modifier.weight(1f)
@@ -121,7 +106,11 @@ fun ComentariosSonidoZitroComp(
                     }
                 }
             }
-            ComentariosSonidoZitroCompExpand(expanded, viewModelPromotorNuevaVisita, navController)
+            ComentariosSonidoZitroCompExpand(
+                expanded = expanded,
+                viewModel = viewModel,
+                coment_sonido = coment_sonido
+            )
         }
     }
 }
@@ -130,9 +119,24 @@ fun ComentariosSonidoZitroComp(
 @Composable
 fun ComentariosSonidoZitroCompExpand(
     expanded: Boolean = true,
-    viewModelPromotorNuevaVisita : PromotorNuevaVisitaViewModel,
-    navController : NavController
+    viewModel: PromotorNuevaVisitaViewModel,
+    coment_sonido: ArrayList<Sonido>,
 ) {
+    val tipo = remember { mutableStateOf(true) }
+    val alert_proveedor = remember { mutableStateOf(false) }
+    val proveedor_info = remember { mutableStateListOf("", "0", "0") }
+    val observaciones_sonido = remember { mutableStateOf("") }
+
+    val icon =
+        if (alert_proveedor.value) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown
+    val focusManager = LocalFocusManager.current
+
+    AlertProveedorSeleccionado(
+        list_proveedor = viewModel.proveedores_selections,
+        alert_proveedor = alert_proveedor,
+        proveedor_info = proveedor_info,
+        onclick = {}
+    )
     AnimatedVisibility(
         visible = expanded,
         enter = enterExpand + enterFadeIn,
@@ -146,20 +150,16 @@ fun ComentariosSonidoZitroCompExpand(
         ) {
             Box(
                 Modifier
-                    .fillMaxSize()) {
-                Column(modifier = Modifier
                     .fillMaxSize()
-                    .padding(10.dp)) {
-                    var expanded by remember { mutableStateOf(false) }
-                    var textfieldSize by remember { mutableStateOf(Size.Zero) }
-                    val icon =
-                        if (expanded)
-                            Icons.Filled.KeyboardArrowUp
-                        else
-                            Icons.Filled.KeyboardArrowDown
-                    val focusManager = LocalFocusManager.current
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(10.dp)
+                ) {
                     Spacer(Modifier.height(10.dp))
-                    Text(text = "Calificacion",
+                    Text(
+                        text = "Calificacion",
                         fontStyle = FontStyle.Normal,
                         modifier = Modifier.align(Alignment.Start),
                         style = MaterialTheme.typography.subtitle2,
@@ -179,6 +179,7 @@ fun ComentariosSonidoZitroCompExpand(
                         ) {
                             Icon(Icons.Filled.CheckCircle, "Diferencia")
                             Spacer(Modifier.width(10.dp))
+
                             Text(
                                 text = "Positivo",
                                 fontStyle = FontStyle.Normal,
@@ -189,18 +190,14 @@ fun ComentariosSonidoZitroCompExpand(
                                 modifier = Modifier
                                     .padding(start = 5.dp)
                                     .align(Alignment.CenterVertically),
-                                checked = viewModelPromotorNuevaVisita.positivo2.value,
+                                checked = tipo.value,
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = colorResource(R.color.reds),
                                     uncheckedColor = colorResource(R.color.graydark),
                                     checkmarkColor = colorResource(R.color.white)
                                 ),
                                 onCheckedChange = {
-                                    viewModelPromotorNuevaVisita.positivo2.value = it
-                                    if (viewModelPromotorNuevaVisita.positivo2.value==true) {
-                                        viewModelPromotorNuevaVisita.calificacion_sonido.value = true
-                                        viewModelPromotorNuevaVisita.negativo2.value=false
-                                    }
+                                    if (it) tipo.value = true
                                 }
                             )
                         }
@@ -227,100 +224,76 @@ fun ComentariosSonidoZitroCompExpand(
                                 modifier = Modifier
                                     .padding(start = 5.dp)
                                     .align(Alignment.CenterVertically),
-                                checked = viewModelPromotorNuevaVisita.negativo2.value,
+                                checked = tipo.value == false,
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = colorResource(R.color.reds),
                                     uncheckedColor = colorResource(R.color.graydark),
                                     checkmarkColor = colorResource(R.color.white)
                                 ),
                                 onCheckedChange = {
-                                    viewModelPromotorNuevaVisita.negativo2.value = it
-                                    if (viewModelPromotorNuevaVisita.negativo2.value == true) {
-                                        viewModelPromotorNuevaVisita.calificacion_sonido.value = false
-                                        viewModelPromotorNuevaVisita.positivo2.value = false
-                                    }
+                                    if (it) tipo.value = false
                                 }
                             )
                         }
                     }
-                    Spacer(Modifier.height(10.dp))
                     OutlinedTextField(
                         enabled = false,
-                        value = viewModelPromotorNuevaVisita.provedor_sonido_comentarios.value,
-                        onValueChange = { },
+                        value = proveedor_info[0],
+                        onValueChange = {},
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                alert_proveedor.value = true
+                            },
+                        label = { Text("Seleccionar Proveedor") },
+                        trailingIcon = {
+                            Icon(icon, "contentDescription")
+                        },
+                        colors = TextFieldDefaults.textFieldColors(
+                            textColor = Color.White
+                        )
+                    )
+                    OutlinedTextField(
+                        value = observaciones_sonido.value,
+                        onValueChange = { observaciones_sonido.value = it },
+                        label = { Text("Observaciones") },
+                        modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions.Default.copy(
-                            keyboardType = KeyboardType.Ascii,
+                            keyboardType = KeyboardType.Text,
                             imeAction = ImeAction.Next
                         ),
                         keyboardActions = KeyboardActions(
                             onNext = { focusManager.moveFocus(FocusDirection.Down) }
                         ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                alertProveedorSonido.value = true
-                                navController.navigate(route = Destination.Dialog.route)
-                            }
-                            .onGloballyPositioned { coordinates ->
-                                textfieldSize = coordinates.size.toSize()
-                            },
-                        label = { Text("Seleccionar Proveedor") },
-                        trailingIcon = {
-                            Icon(icon,"contentDescription",
-                                Modifier.clickable {
-                                    alertProveedorSonido.value = true
-                                    navController.navigate(route = Destination.Dialog.route)
-                                }
-                            )
-                        }
-                    )
-                    Spacer(Modifier.height(10.dp))
-                    OutlinedTextField(
-                        value = viewModelPromotorNuevaVisita.observaciones_sonido.value,
-                        onValueChange = { viewModelPromotorNuevaVisita.observaciones_sonido.value = it
-                             },
-                        label = { Text("Observaciones") },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            keyboardType = KeyboardType.Text,
-                            imeAction = ImeAction.Next),
-                        keyboardActions = KeyboardActions(
-                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                        ),
                         leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Filled.Comment,
-                                contentDescription = "observaciones"
-                            )
-                        }
-                    )
-                    Spacer(Modifier.height(10.dp))
-                    val isValidate by derivedStateOf {
-                        viewModelPromotorNuevaVisita.provedor_sonido_comentarios.value.isNotBlank()
-                                && viewModelPromotorNuevaVisita.observaciones_sonido.value.isNotBlank()
-                    }
-                    if(isValidate==false){
-                        Text(
-                            text = "¡ Hay campos vacíos !",
-                            modifier = Modifier
-                                .align(Alignment.CenterHorizontally)
-                            ,
-                            fontSize = 13.sp,
-                            textAlign = TextAlign.Start,
+                            Icon(Icons.Filled.Comment, "")
+                        },
+                        colors = TextFieldDefaults.textFieldColors(
+                            textColor = Color.White
                         )
+                    )
+                    val isValidate by derivedStateOf {
+                        proveedor_info[0].isNotBlank()
+                                && proveedor_info[1].toInt() > 0
+                                && observaciones_sonido.value.isNotBlank()
                     }
                     Spacer(Modifier.height(10.dp))
                     val isRotated = rememberSaveable { mutableStateOf(false) }
                     val rotationAngle by animateFloatAsState(
                         targetValue = if (isRotated.value) 360F else 0F,
-                        animationSpec = tween(durationMillis = 500,easing = FastOutLinearInEasing)
+                        animationSpec = tween(durationMillis = 500, easing = FastOutLinearInEasing)
 
                     )
                     Button(
                         enabled = isValidate,
                         onClick = {
-                            viewModelPromotorNuevaVisita.addComentSonido()
-                            isRotated.value = !isRotated.value
+                            viewModel.addComentSonido(
+                                proveedor_info = proveedor_info,
+                                observaciones_sonido = observaciones_sonido,
+                                tipo = tipo,
+                                isRotated = isRotated,
+                                coment_sonido = coment_sonido
+                            )
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -331,7 +304,8 @@ fun ComentariosSonidoZitroCompExpand(
                             },
                         elevation = ButtonDefaults.elevation(defaultElevation = 5.dp),
                         shape = RoundedCornerShape(10),
-                        colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.reds)
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = colorResource(id = R.color.reds)
                         )
                     ) {
                         Icon(
@@ -340,52 +314,84 @@ fun ComentariosSonidoZitroCompExpand(
                             tint = Color.White
                         )
                     }
-                    Spacer(Modifier.height(10.dp))
+                }
+            }
+        }
+    }
+}
 
-                    viewModelPromotorNuevaVisita.addSonido.forEach { item ->
-                        Card(modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 5.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 10.dp),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(Icons.Filled.SnippetFolder, "Diferencia")
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(horizontal = 20.dp)
-                                ) {
-                                    Column() {
-                                        Row(modifier = Modifier.padding(start = 5.dp,top = 15.dp)) {
-                                            Text(
-                                                text = "Calificacion:",
-                                                fontSize = 15.sp,
-                                                textAlign = TextAlign.Start,
-                                                modifier = Modifier.padding(end = 10.dp, top=5.dp)
-                                            )
-                                            if(item.tipo!!){
-                                                Icon(Icons.Filled.ThumbUp, "CheckCircle")
-                                            }else{
-                                                Icon(Icons.Outlined.ThumbDown, "CheckCircleOutline")
-                                            }
-                                        }
-                                        Text(
-                                            text = "Proveedor: ${item.clasificacionComentario!!.nombre} \nObservaciones: ${item.observaciones}",
-                                            fontSize = 15.sp,
-                                            textAlign = TextAlign.Start,
-                                            modifier = Modifier.padding(end = 15.dp, start = 5.dp,bottom = 15.dp)
-                                        )
-                                    }
-                                }
-                            }
+@Composable
+fun ItemComentSonidoG(
+    item: Sonido,
+    viewModelNV: PromotorNuevaVisitaViewModel
+) {
+    val icon = if (item.tipo!!) Icons.Filled.ThumbUp else Icons.Filled.ThumbDown
+    Card(modifier = Modifier
+        .fillMaxWidth()
+        .padding(vertical = 5.dp, horizontal = 15.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(10.dp))
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp, vertical = 5.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 10.dp)
+            ) {
+                Column {
+                    Row {
+                        Icon(
+                            Icons.Filled.SnippetFolder, "Diferencia", modifier = Modifier.align(
+                                Alignment.CenterVertically
+                            )
+                        )
+                        Column {
+                            Text(
+                                text = "Proveedor: ${item.clasificacionComentario!!.nombre}",
+                                fontSize = 15.sp,
+                                textAlign = TextAlign.Start,
+                                modifier = Modifier.padding(vertical = 5.dp, horizontal = 10.dp)
+                            )
                         }
                     }
+                    Column(
+                        modifier = Modifier
+                            .padding(top = 10.dp)
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(5.dp))
+                            .background(graydark)
+                            .padding(2.dp)
+                    ) {
+                        Text(
+                            text = "Observaciones: ${item.observaciones}",
+                            fontSize = 15.sp,
+                            textAlign = TextAlign.Start,
+                            modifier = Modifier.padding(horizontal = 10.dp)
+                        )
+
+                    }
+                }
+            }
+            Column() {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = "icon",
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(vertical = 10.dp)
+                )
+                IconButton(onClick = {
+                    viewModelNV.RemoveComentSonido(item)
+                }) {
+                    Icon(
+                        imageVector = Icons.Filled.Delete,
+                        contentDescription = "delete"
+                    )
                 }
             }
         }

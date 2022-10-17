@@ -240,7 +240,7 @@ fun DisplayAlert(
             shape = dialogShape
         )
     }*/
-    if (alertProveedorSonido.value) {
+    /*if (alertProveedorSonido.value) {
         AlertDialog(
             onDismissRequest = {
                 onDialogStateChange?.invoke(false)
@@ -318,7 +318,7 @@ fun DisplayAlert(
             modifier = modifier,
             shape = dialogShape
         )
-    }
+    }*/
     if (alertObservacionesCompetecia.value) {
         AlertDialog(
             onDismissRequest = {
@@ -359,11 +359,11 @@ fun DisplayAlert(
                             Column(modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    //navController.popBackStack()
+                                 /*   //navController.popBackStack()
                                     viewModel.selectProvedorObservaciones(
                                         id = label.id!!,
                                         nombre = label.nombre!!,
-                                    )
+                                    )*/
                                 }
                                 .padding(horizontal = 20.dp, vertical = 10.dp)) {
                                 Text(text = label.nombre.toString())

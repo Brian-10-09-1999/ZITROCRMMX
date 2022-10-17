@@ -10,6 +10,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -20,21 +22,22 @@ import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import com.example.zitrocrm.R
-import com.example.zitrocrm.network.models_dto.DetalleOcupacionDto.Acumulados
-import com.example.zitrocrm.network.models_dto.DetalleOcupacionDto.Comentarios
-import com.example.zitrocrm.network.models_dto.DetalleOcupacionDto.MasJugado
-import com.example.zitrocrm.network.models_dto.DetalleOcupacionDto.Visita
+import com.example.zitrocrm.network.models_dto.DetalleOcupacionDto.*
 import com.example.zitrocrm.network.models_dto.Filter.FilterViewModel
 import com.example.zitrocrm.screens.salas.PromotorNuevaVisita.ExpandedScreens.*
 import com.example.zitrocrm.screens.salas.PromotorNuevaVisita.PromotorNuevaVisitaViewModel
@@ -64,6 +67,8 @@ fun PromotorNewScreenn(
     val acumulados = viewModelNV.visitaPromotor.value!!.acumulados
     val mas_jugado = viewModelNV.visitaPromotor.value!!.masJugado
     val coment_generales = viewModelNV.visitaPromotor.value!!.comentarios
+    val coment_sonido = viewModelNV.visitaPromotor.value!!.comentariosSonido
+    val observ_competencia = viewModelNV.visitaPromotor.value!!.observacionesCompetencia
     val tipo = viewModelNV.tipo
     val act = viewModelNV.a.value
     val colorbingo by animateColorAsState(when (tipo.value) {true -> Color.White false -> Color.Green })
@@ -112,7 +117,9 @@ fun PromotorNewScreenn(
                 visita = visita,
                 acumulados = acumulados,
                 mas_jugado = mas_jugado,
-                coment_generales = coment_generales
+                coment_generales = coment_generales,
+                coment_sonido = coment_sonido,
+                observ_competencia = observ_competencia
             )
         }
     }
@@ -225,6 +232,8 @@ fun ContentNuevaVisita(
     acumulados: ArrayList<Acumulados>,
     mas_jugado: ArrayList<MasJugado>,
     coment_generales: ArrayList<Comentarios>,
+    coment_sonido: ArrayList<Sonido>,
+    observ_competencia: ArrayList<ObservacionesCompetencia>,
 ) {
     Scaffold {
         AlertEnvio(viewModelNV)
@@ -316,7 +325,7 @@ fun ContentNuevaVisita(
                 }
             }
 
-//----------------------------LO MAS JUGADO ZITRO Y COMPETENCIA--------------------------------
+//--------------------------LO MAS JUGADO ZITRO Y COMPETENCIA--------------------------------
             item {
                 JugadoZitroCompetencia(
                     card5 = "Lo más jugado Zitro y competencia",
@@ -333,10 +342,13 @@ fun ContentNuevaVisita(
                 }
                 //-----ARRAY MAS JUGADO-----//
                 itemsIndexed(mas_jugado){index,item->
-                    DataItemMasjugado(item,viewModelNV)
+                    DataItemMasjugado(
+                        item = item,
+                        viewModelNV = viewModelNV
+                    )
                 }
             }
-            //COMENTARIOS GENERALES JUGADORES
+//------------------------COMENTARIOS GENERALES JUGADORES-----------------------------------//
             item {
                 ComentariosGeneralesJugadores(
                     card6 = "Comentarios Generales Jugadores",
@@ -348,30 +360,58 @@ fun ContentNuevaVisita(
             }
             if(cards[5]&&coment_generales.isNotEmpty()){
                 item {
-                    ItemsTittle("Lo Más Jugado Generados")
+                    ItemsTittle("Comentarios Generados")
                 }
                 itemsIndexed(coment_generales){index,item->
-                    ItemComentariosG(item)
+                    ItemComentariosG(
+                        item = item,
+                        viewModelNV = viewModelNV
+                    )
                 }
             }
-            //COMENTARIOS DE SONIDO MAQUINAS Y PROVEEDORES CERCANOS
+//---------------------COMENTARIOS DE SONIDO MAQUINAS Y PROVEEDORES CERCANOS---------------------//
             item {
                 ComentariosSonidoZitroComp(
                     card7 = "Comentarios Sonido Nuestras Máquinas y Proveedores Cercanos",
                     onCardArrowClick = { viewModelNV.cardsexp(6) },
-                    expanded = cards[6], viewModelNV, navController
+                    expanded = cards[6],
+                    viewModel = viewModelNV,
+                    coment_sonido = coment_sonido
                 )
             }
-            //OBSERVACIONES GENERALES
+            if (cards[6]&&coment_sonido.isNotEmpty()){
+                item {
+                    ItemsTittle("Comentarios Sonido Generados")
+                }
+                itemsIndexed(coment_sonido){index,item->
+                    ItemComentSonidoG(
+                        item = item,
+                        viewModelNV = viewModelNV
+                    )
+                }
+            }
+//----------------------------------OBSERVACIONES GENERALES----------------------------------//
             item {
                 ObservacionesCompetencia(
                     card8 = "Observaciones Competencia",
                     onCardArrowClick = { viewModelNV.cardsexp(7) },
                     expanded = cards[7],
                     viewModelNV = viewModelNV,
-                    navController = navController,
-                    visita = visita
+                    observ_competencia = observ_competencia
                 )
+            }
+            if(cards[7]){
+                if(observ_competencia.isNotEmpty()){
+                    itemsIndexed(observ_competencia) { index, item ->
+                        ItemObsevaciones(
+                            item = item,
+                            viewModelNV = viewModelNV
+                        )
+                    }
+                }
+                item {
+                    visita_observacion(visita)
+                }
             }
             //FOLIOS TECNICOS
             item {
@@ -385,11 +425,6 @@ fun ContentNuevaVisita(
                 visita.fecha!!.day!! > 0
                         && visita.fecha!!.month!! > 0
                         && visita.fecha!!.year!! > 0
-                        && viewModelNV.dataProvedorOcupacion.isNotEmpty()
-                        && viewModelNV.dataProvedorOcupacionSlots.isNotEmpty()
-                        //&& viewModelNV.dataLoMasJugadoZitroZomp.isNotEmpty()
-                        && viewModelNV.addSonido.isNotEmpty()
-                        //&& viewModelNV.dataComentariosGeneralesJugadores.isNotEmpty()
             }
             item {
                 Spacer(Modifier.height(10.dp))
@@ -400,7 +435,7 @@ fun ContentNuevaVisita(
 
                 )
                 Button(
-                    enabled = isValidate,
+                    //enabled = isValidate,
                     onClick = {
                         viewModelNV.postVisitaPromotoresSala(
                             token,
@@ -431,7 +466,92 @@ fun ContentNuevaVisita(
                 Spacer(Modifier.height(10.dp))
             }
         }
+    }
+}
 
+@Composable
+fun visita_observacion(visita: Visita) {
+    Column(modifier = Modifier.padding(horizontal = 25.dp)) {
+        var propuestas by remember { mutableStateOf(visita.propuestas) }
+        var conclusion by remember { mutableStateOf(visita.conclusion) }
+        var observacionesGenerales by remember { mutableStateOf(visita.observacionesGenerales) }
+        val focusManager = LocalFocusManager.current
+        OutlinedTextField(
+            value = propuestas.toString(),
+            onValueChange = {
+                visita.propuestas = it
+                propuestas = visita.propuestas
+            },
+            label = { Text("Propuestas") },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+            ),
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Filled.Comment,
+                    contentDescription = "observaciones"
+                )
+            },
+            colors = TextFieldDefaults.textFieldColors(
+                textColor = Color.White
+            )
+        )
+        OutlinedTextField(
+            value = conclusion.toString(),
+            onValueChange = {
+                visita.conclusion = it
+                conclusion = visita.conclusion
+            },
+            label = { Text("Conclusión") },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+            ),
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Filled.Comment,
+                    contentDescription = "observaciones"
+                )
+            },
+            colors = TextFieldDefaults.textFieldColors(
+                textColor = Color.White
+            )
+        )
+        OutlinedTextField(
+            value = observacionesGenerales.toString(),
+            onValueChange = {
+                visita.observacionesGenerales = it
+                observacionesGenerales = visita.observacionesGenerales
+            },
+            label = { Text("Observaciones Generales") },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+            ),
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Filled.Comment,
+                    contentDescription = "observaciones"
+                )
+            },
+            colors = TextFieldDefaults.textFieldColors(
+                textColor = Color.White
+            )
+        )
+        Spacer(Modifier.height(15.dp))
     }
 }
 

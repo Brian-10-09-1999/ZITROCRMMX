@@ -149,7 +149,6 @@ fun AcumuladosBingoExpand(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(10.dp))
                 .background(Color.Black)
                 .padding(15.dp)
         ) {
@@ -202,13 +201,6 @@ fun AcumuladosBingoExpand(
                 enabled = false,
                 value = proveedor_info[0],
                 onValueChange = {},
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    keyboardType = KeyboardType.Ascii,
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 2.5.dp)

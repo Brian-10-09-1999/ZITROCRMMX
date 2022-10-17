@@ -29,6 +29,7 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
     //-----------------------------------------BINGO 2 - SLOTS 1-----------------------------------------------//
     //----------------------------------------ARRAY DE LA VISITA-----------------------------------------------//
     var visitaPromotor: MutableState<PromotorNuevaVisita?> = mutableStateOf(PromotorNuevaVisita())
+
     //-----------------------------------------VISITA PROMOTORES-----------------------------------------------//
     val fecha = mutableStateOf("")
     val hora_entrada = mutableStateOf("")
@@ -78,6 +79,7 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         paqueteria_familia[1] = "0"
         isRotated.value = !isRotated.value
     }
+
     //---------------------------------------ACUMULADOS BINGO--------------------------------------------------//
     fun addAcumulados(
         proveedor_info: SnapshotStateList<String>,
@@ -121,9 +123,11 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         premio.value = ""
         diferencia.value = "";a()
     }
+
     fun removeAcumulados(item: Acumulados) {
         visitaPromotor.value!!.acumulados.remove(item);a()
     }
+
     //--------------------------------------LO MAS JUGADO ZITRO Y COMPETENCIA----------------------------------------//
     fun addZitroyComp(
         unidadOcupacion: MutableState<String>,
@@ -180,17 +184,106 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         zona_fumar.value = false
         isRotated.value = !isRotated.value;a()
     }
+
     fun removeMasJugados(item: MasJugado) {
         visitaPromotor.value!!.masJugado.remove(item);a()
     }
-    //---------------------------------------------------------------------------------------------//
 
-    var positivo2 = mutableStateOf(true)
-    var negativo2 = mutableStateOf(false)
+    //-------------------------------------COMENTARIOS GENERALES-----------------------------------------//
+    fun AddComentariosGenerales(
+        paqueteria_familia: SnapshotStateList<String>,
+        perfil_selec: SnapshotStateList<String>,
+        procedencia: MutableState<String>,
+        ingresos: MutableState<String>,
+        comentarios_jugadores: MutableState<String>,
+        tipo: MutableState<Boolean>,
+        isRotated: MutableState<Boolean>,
+        coment_generales: ArrayList<Comentarios>
+    ) {
+        coment_generales.add(
+            Comentarios(
+                juego = ID(
+                    id = paqueteria_familia[1].toInt(),
+                    nombre = paqueteria_familia[0]
+                ),
+                perfil = ID(
+                    id = perfil_selec[1].toInt(),
+                    nombre = perfil_selec[0]
+                ),
+                procedencia = procedencia.value,
+                ingresos = ingresos.value.toInt(),
+                comentario = comentarios_jugadores.value,
+                tipo = tipo.value
+            )
+        )
+        isRotated.value = !isRotated.value;a()
+        paqueteria_familia[0] = ""
+        paqueteria_familia[1] = "0"
+        perfil_selec[0] = ""
+        perfil_selec[1] = "0"
+        procedencia.value = ""
+        ingresos.value = ""
+        comentarios_jugadores.value = ""
+        tipo.value = true
+    }
+
+    fun RemoveComentGenerales(item: Comentarios) {
+        visitaPromotor.value!!.comentarios.remove(item);a()
+    }
+
+    //----------------------------COMENTARIOS SONIDO MAQUINAS Y PROVEEDORES CERCANOS---------------------------//
+    fun addComentSonido(
+        proveedor_info: SnapshotStateList<String>,
+        observaciones_sonido: MutableState<String>,
+        tipo: MutableState<Boolean>,
+        isRotated: MutableState<Boolean>,
+        coment_sonido: ArrayList<Sonido>
+    ) {
+        coment_sonido.add(
+            Sonido(
+                ID(id = proveedor_info[1].toInt(), nombre = proveedor_info[0]),
+                observaciones = observaciones_sonido.value,
+                tipo = tipo.value
+            )
+        )
+        proveedor_info[0] = ""
+        proveedor_info[1] = "0"
+        observaciones_sonido.value = ""
+        tipo.value = true
+        isRotated.value = !isRotated.value;a()
+    }
+
+    fun RemoveComentSonido(item: Sonido) {
+        visitaPromotor.value!!.comentariosSonido.remove(item);a()
+    }
+
+    //---------------------------------OBSERVACIONES DE LA COMPETENCIA----------------------//
+    fun addObservacionesCompetencia(
+        observ_competencia: ArrayList<ObservacionesCompetencia>,
+        observaciones_competencia: MutableState<String>,
+        proveedor_info: SnapshotStateList<String>,
+        isRotated: MutableState<Boolean>
+    ) {
+        observ_competencia.add(
+            ObservacionesCompetencia(
+                observaciones = observaciones_competencia.value,
+                proveedor = ID(id = proveedor_info[1].toInt(), nombre = proveedor_info[0])
+            )
+        )
+        observaciones_competencia.value = ""
+        proveedor_info[1] = "0"
+        proveedor_info[0] = ""
+        isRotated.value = !isRotated.value;a()
+    }
+
+    fun RemoveObservacionesComp(item: ObservacionesCompetencia) {
+        visitaPromotor.value!!.observacionesCompetencia.remove(item);a()
+    }
+
+
     var tipo = mutableStateOf(false)
     val objetivoSemanal = mutableStateListOf<Message>()
     val juegosFilter = mutableStateListOf<Juegos>()
-    val juegosZt = mutableStateListOf<Juegos>()
     val foliostecnicossalas: MutableList<rows> = arrayListOf()
 
     var dataProvedorOcupacion = mutableStateListOf<Ocupacion>()
@@ -198,19 +291,6 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
     val proveedores_selections: MutableList<Rows> = arrayListOf()
     val proveedorObservacionesCompetencia: MutableList<Rows> = arrayListOf()
     val proveedorService = mutableStateListOf<Rows>()
-
-    /**COMENTARIOS SONIDOS NUESTRAS MAQUINAS, ZITRO COMPETENCIA**/
-    var calificacion_sonido = mutableStateOf(true)
-    var provedor_sonido_comentarios = mutableStateOf("")
-    var id_provedor_sonido_comentarios = mutableStateOf(0)
-    var observaciones_sonido = mutableStateOf("")
-
-    /**OBSERVACIONES COMPETENCIA**/
-    var provedor_competencia = mutableStateOf("")
-    var id_provedor_competencia = mutableStateOf(0)
-    var observaciones_competencia = mutableStateOf("")
-    val dataObservacionesCompetencia: MutableList<ObservacionesCompetencia> = arrayListOf()
-    val addSonido: MutableList<Sonido> = arrayListOf()
 
     /**VISITA PROMOTORES**/
     val networkstate = mutableStateOf("")
@@ -220,14 +300,14 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
     fun cardsexp(ind: Int) {
         cards.forEachIndexed { index, it ->
             if (index == ind) {
-                if (it == true) {
-                    cards.set(index, false)
-                    cards[index] = false
-                } else {
-                    cards.set(index, true)
-                }
+                if (it == true) cards[index] = false
+                    /*cards.set(index, false)
+                    cards[index] = false*/
+                 else cards[index] = true
+                    //cards.set(index, true)
             } else {
-                cards.set(index, false)
+                cards[index] = false
+                //cards.set(index, false)
             }
         }
         a()
@@ -235,11 +315,8 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
 
     fun cleanReport() {
         visitaPromotor.value!!.visita!!.tipo = 0
-        //visita.value!!.tipo = 0
         dataProvedorOcupacion.clear()
         dataProvedorOcupacionSlots.clear()
-        addSonido.clear()
-        dataObservacionesCompetencia.clear()
         alertDetalleSave.value = true
         proveedores_selections.clear()
     }
@@ -253,39 +330,57 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             val authService = RetrofitHelper.getAuthService()
             try {
-                /*alertdialog(1,"")
+                visitaPromotor.value!!.visita!!.salaid = salaid.toInt()
+                listdetalleOcu.forEach {
+                    if (it.tipo == 1) {
+                        it.horarios.forEach { hora ->
+                            visitaPromotor.value!!.ocupacionSlots.add(
+                                OcupacionSlots(
+                                    horario = if(hora.horario!!.isBlank()) null else hora.horario!!.toInt(),
+                                    juegoidfk =if(it.juegoidfk==0) null else it.juegoidfk,
+                                    maquinas1 = it.maquinas1,
+                                    ocupacionMaquinas1 = if(hora.ocupacion1=="") null else hora.ocupacionLt1!!.toInt(),
+                                    proveedoridfk = it.proveedoridfk,
+                                    subjuegoidfk = if(it.subjuegoidfk==0)null else it.subjuegoidfk,
+                                    proveedor = it.proveedor,
+                                    juego =if(it.juego!!.isBlank())null else it.juego,
+                                    subjuego = if(it.subjuego!!.isBlank())null else it.subjuego
+                                )
+                            )
+                        }
+                    } else {
+                        it.horarios.forEach { hora ->
+                            visitaPromotor.value!!.ocupacion.add(
+                                Ocupacion(
+                                    horario = if(hora.horario!!.isBlank()) null else hora.horario!!.toInt(),
+                                    juegoidfk = if(it.juegoidfk==0) null else it.juegoidfk,
+                                    maquinas1 = it.maquinas1,
+                                    maquinasLt1 = it.maquinasLt1,
+                                    ocupacionMaquinas1 = if(hora.ocupacion1!!.isBlank()) null else hora.ocupacion1!!.toInt(),
+                                    ocupacionMaquinaslt1 = if(hora.ocupacionLt1!!.isBlank()) null else hora.ocupacionLt1!!.toInt(),
+                                    proveedoridfk = it.proveedoridfk,
+                                    subjuegoidfk = if(it.subjuegoidfk==0)null else it.subjuegoidfk,
+                                    proveedor = it.proveedor,
+                                    juego = if(it.juego!!.isBlank())null else it.juego,
+                                    subjuego = if(it.subjuego!!.isBlank())null else it.subjuego
+                                )
+                            )
+                        }
+                    }
+                }
+
+                alertdialog(1, "")
                 val responseService = authService.postSalaVisitaPromotores(
-                    token = token,
-                    PromotorNuevaVisita(Visita(
-                        conclusion = conclucion_visita.value,
-                        fecha = Fecha(day = fecha_completa[2], month = fecha_completa[1], year = fecha_completa[0]),
-                        horaEntrada = fecha_inicio_fin[1].toInt(),
-                        horaSalida = fecha_inicio_fin[2].toInt(),
-                        objetivo = objetivoIdSelecc.value,
-                        objetivoSemanal = objetivoGeneralidfk_visita.value,
-                        observacionesGenerales = observaciones_visita.value,
-                        propuestas = propuestas_visita.value,
-                        queHacer = queHacer_visita.value,
-                        tipo = visita.value!!.tipo,
-                        salaid = salaid
-                    ),
-                        ocupacion = ArrayList<Ocupacion>(dataProvedorOcupacion),//ADD
-                        ocupacionSlots = ArrayList<OcupacionSlots>(dataProvedorOcupacionSlots),
-                        acumulados = ArrayList<Acumulados>(dataAcumuladosBingo),
-                        masJugado = ArrayList<MasJugado>(dataLoMasJugadoZitroZomp),
-                        comentarios = ArrayList<Comentarios>(dataComentariosGeneralesJugadores),
-                        comentariosSonido = ArrayList<Sonido>(addSonido),
-                        observacionesCompetencia = ArrayList<ObservacionesCompetencia>(dataObservacionesCompetencia),
-                    )
+                    token = token,visitaPromotor.value!!
                 )
-                if (responseService.isSuccessful){
+                if (responseService.isSuccessful) {
                     networkstate_ID.value = responseService.body()!!.message!!.id!!.toInt()
                     networkstate.value = responseService.body()!!.msg.toString()
                     alertDetalleSave.value = true
-                }else{
+                } else {
                     networkstate.value = responseService.body()!!.msg.toString()
                     alertDetalleSave.value = true
-                }*/
+                }
                 alertdialog(0, "")
             } catch (e: Exception) {
                 if (e.toString() == "java.lang.NullPointerException") {
@@ -451,66 +546,6 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
             }
         }
     }
-    /**OBSERVACIONES DE LA COMPETENCIA**/
-    fun selectProvedorObservaciones(id: Int, nombre: String) {
-        alertObservacionesCompetecia.value = false
-        provedor_competencia.value = nombre
-        id_provedor_competencia.value = id
-    }
-
-    fun addObservacionesCompetencia() {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                dataObservacionesCompetencia.add(
-                    ObservacionesCompetencia(
-                        observaciones = observaciones_competencia.value,
-                        proveedor = ID(id_provedor_competencia.value, provedor_competencia.value),
-                    )
-                )
-                id_provedor_competencia.value = 0
-                provedor_competencia.value = ""
-                observaciones_competencia.value = ""
-                Log.d("ADDD", "OBSERVACIONES COMPETENCIA" + dataObservacionesCompetencia)
-
-            } catch (e: Exception) {
-                Log.d("Exception", "OBSERVACIONES COMPETENCIA", e)
-            }
-        }
-    }
-
-    /**COMENTARIOS DE SONIDO ZITRO COMPETENCIA**/
-    fun selectProveedorSonido(id: Int, nombre: String) {
-        alertProveedorSonido.value = false
-        provedor_sonido_comentarios.value = nombre
-        id_provedor_sonido_comentarios.value = id
-    }
-
-    fun addComentSonido() {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                addSonido.add(
-                    Sonido(
-                        clasificacionComentario = ID(
-                            id_provedor_sonido_comentarios.value,
-                            provedor_sonido_comentarios.value
-                        ),
-                        observaciones = observaciones_sonido.value,
-                        tipo = calificacion_sonido.value
-                    )
-                )
-                calificacion_sonido.value = true
-                negativo2.value = false
-                positivo2.value = true
-
-                id_provedor_sonido_comentarios.value = 0
-                provedor_sonido_comentarios.value = ""
-                observaciones_sonido.value = ""
-
-            } catch (e: Exception) {
-                Log.d("Exception", "Detalle Ocupacion", e)
-            }
-        }
-    }
 
     /**FOLIOS TECNICOS SALAS**/
     fun getFoliosTecnicos(token: String, sala: Int, cliente: Int) {
@@ -533,7 +568,6 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             objetivoSemanal.clear()
             juegosFilter.clear()
-            juegosZt.clear()
             proveedorService.clear()
             val authService = RetrofitHelper.getAuthService()
             try {
@@ -547,8 +581,9 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                     delay(2000)
                 }
                 //-------------------------------------------JUEGOS ZITRO---------------------------------------------------//}
-                val clasifi = if(tipoId==1) 2 else 1
-                val responseService2 = authService.getJuegosZitro(token = token, tipo = tipoId, clasificacion = null)
+                val clasifi = if (tipoId == 1) 2 else 1
+                val responseService2 =
+                    authService.getJuegosZitro(token = token, tipo = tipoId, clasificacion = null)
                 if (responseService2.isSuccessful) {
                     juegosFilter += responseService2.body()!!.juegos
                 } else {
