@@ -81,7 +81,7 @@ private fun CustomTopAppBarSalas(navController: NavController) {
                     Text(text = "Region: "+region, fontSize = 7.sp, color = Color.White)
                     Text(text = "Sala: "+sala, fontSize = 7.sp, color = Color.White)
                 }
-                Image(
+                /*Image(
                     painter = painterResource(R.drawable.back_button),
                     contentDescription = "",
                     modifier = Modifier
@@ -90,7 +90,7 @@ private fun CustomTopAppBarSalas(navController: NavController) {
                         }
                         .align(Alignment.CenterStart)
                         .size(29.dp)
-                )
+                )*/
                 Image(
                     painter = painterResource(R.drawable.crm_logo),
                     contentDescription = "",

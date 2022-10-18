@@ -26,6 +26,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -56,11 +57,12 @@ fun ComentariosGeneralesJugadores(
 ) {
     val tipo = remember { mutableStateOf(true) }
     val paqueteria_familia = remember { mutableStateListOf("", "0") }
+    val sub_juego = remember { mutableStateListOf("", "0") }
     val perfil_selec = remember { mutableStateListOf("", "0") }
     val procedencia_comentarios = remember { mutableStateOf("") }
     val ingresos_comentarios = remember { mutableStateOf("") }
     val comentarios_jugadores = remember { mutableStateOf("") }
-    val alert = remember { mutableStateOf(false) }
+    val alert = remember { mutableStateOf(0) }
     Card(
         backgroundColor = blackdark,
         shape = RoundedCornerShape(15.dp),
@@ -128,7 +130,8 @@ fun ComentariosGeneralesJugadores(
                 procedencia = procedencia_comentarios,
                 ingresos = ingresos_comentarios,
                 comentarios_jugadores = comentarios_jugadores,
-                alert = alert
+                alert = alert,
+                sub_juego = sub_juego
             )
         }
     }
@@ -146,7 +149,8 @@ fun ComentariosGeneralesJugadoresExpand(
     procedencia: MutableState<String>,
     ingresos: MutableState<String>,
     comentarios_jugadores: MutableState<String>,
-    alert: MutableState<Boolean>
+    alert: MutableState<Int>,
+    sub_juego: SnapshotStateList<String>
 ) {
     AnimatedVisibility(
         visible = expanded,
@@ -180,7 +184,8 @@ fun ComentariosGeneralesJugadoresExpand(
                     AlertJuegosComent(
                         viewModel = viewModel,
                         paqueteria_familia = paqueteria_familia,
-                        alert = alert
+                        alert = alert,
+                        sub_juego = sub_juego
                     )
                     //-----------------------------------------------------------------------------//
                     Text(
@@ -269,7 +274,7 @@ fun ComentariosGeneralesJugadoresExpand(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                alert.value = true
+                                alert.value = 1
                             },
                         label = { Text("Juegos") },
                         trailingIcon = {
@@ -278,7 +283,24 @@ fun ComentariosGeneralesJugadoresExpand(
                             textColor = Color.White
                         )
                     )
-                    //------------------------SELECT PERFIL----------------------------------//
+                    //----------------------------SELECT SUB JUEGO------------------------------//
+                    OutlinedTextField(
+                        enabled = false,
+                        value = sub_juego[0],
+                        onValueChange = {},
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                alert.value = 2
+                            },
+                        label = { Text("Sub Juegos") },
+                        trailingIcon = {
+                            Icon(icon, "contentDescription")
+                        }, colors = TextFieldDefaults.textFieldColors(
+                            textColor = Color.White
+                        )
+                    )
+                    //----------------------------SELECT PERFIL----------------------------------//
                     OutlinedTextField(
                         enabled = false,
                         value = perfil_selec[0],
@@ -382,6 +404,8 @@ fun ComentariosGeneralesJugadoresExpand(
                                 && paqueteria_familia[0].isNotBlank()
                                 && perfil_selec[1].toInt() > 0
                                 && perfil_selec[0].isNotBlank()
+                                && sub_juego[0].isNotBlank()
+                                && sub_juego[1].toInt() > 0
                                 && procedencia.value.isNotBlank()
                                 && ingresos.value.isNotBlank()
                                 && comentarios_jugadores.value.isNotBlank()
@@ -403,7 +427,8 @@ fun ComentariosGeneralesJugadoresExpand(
                                 comentarios_jugadores = comentarios_jugadores,
                                 tipo = tipo,
                                 isRotated = isRotated,
-                                coment_generales = coment_generales
+                                coment_generales = coment_generales,
+                                sub_juego = sub_juego
                             )
                         },
                         modifier = Modifier
@@ -535,9 +560,11 @@ fun ItemComentariosG(
 fun AlertJuegosComent(
     viewModel: PromotorNuevaVisitaViewModel,
     paqueteria_familia: SnapshotStateList<String>,
-    alert: MutableState<Boolean>
+    alert: MutableState<Int>,
+    sub_juego: SnapshotStateList<String>
 ) {
-    if (alert.value) {
+    val context = LocalContext.current
+    if (alert.value==1) {
         AlertDialog(
             onDismissRequest = {},
             title = null,
@@ -558,7 +585,7 @@ fun AlertJuegosComent(
                                 .align(Alignment.CenterVertically)
                                 .padding(horizontal = 10.dp)
                                 .clickable {
-                                    alert.value = false
+                                    alert.value = 0
                                 }
                         )
                         Text(
@@ -574,7 +601,62 @@ fun AlertJuegosComent(
                             .clickable {
                                 paqueteria_familia[0] = label.nombre.toString()
                                 paqueteria_familia[1] = label.id.toString()
-                                alert.value = false
+                                sub_juego[0] = ""
+                                sub_juego[1] = "0"
+                                alert.value = 0
+                                viewModel.getSubjuegos(label.id!!.toInt(), context = context)
+                            }
+                            .padding(horizontal = 20.dp, vertical = 10.dp)) {
+                            Text(text = label.nombre.toString())
+                        }
+                    }
+                }
+            },
+            properties = DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = false
+            ),
+            shape = RoundedCornerShape(15.dp)
+        )
+    }
+    if (alert.value==2) {
+        AlertDialog(
+            onDismissRequest = {},
+            title = null,
+            buttons = {
+                Box(
+                    modifier = Modifier
+                        .height(60.dp)
+                        .fillMaxWidth()
+                        .background(color = colorResource(R.color.reds))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .align(Alignment.Center)
+                    ) {
+                        Icon(
+                            Icons.Filled.ArrowBack, "Hora", modifier = Modifier
+                                .align(Alignment.CenterVertically)
+                                .padding(horizontal = 10.dp)
+                                .clickable {
+                                    alert.value = 0
+                                }
+                        )
+                        Text(
+                            text = "SELECCIONA EL SUB JUEGO",
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        )
+                    }
+                }
+                LazyColumn {
+                    itemsIndexed(viewModel.subjuegos) { index, label ->
+                        Column(modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                sub_juego[0] = label.nombre.toString()
+                                sub_juego[1] = label.id.toString()
+                                alert.value = 0
                             }
                             .padding(horizontal = 20.dp, vertical = 10.dp)) {
                             Text(text = label.nombre.toString())

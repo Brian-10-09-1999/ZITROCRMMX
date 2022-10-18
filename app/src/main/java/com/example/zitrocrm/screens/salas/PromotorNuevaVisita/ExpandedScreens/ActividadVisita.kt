@@ -107,7 +107,7 @@ fun ObjetivoVisitaExpand(
     visita: Visita,
 ) {
     var queHacer by remember { mutableStateOf(visita.queHacer.toString()) }
-    var actividad by remember { mutableStateOf(visita.objetstring.toString()) }
+    var actividad by remember { mutableStateOf(visita.objetivoSemanal.toString()) }
     AnimatedVisibility(
         visible = expanded,
         enter = enterExpand + enterFadeIn,
@@ -131,8 +131,8 @@ fun ObjetivoVisitaExpand(
                     OutlinedTextField(
                         value = actividad,
                         onValueChange = {
-                            visita.objetstring = it
-                            actividad = visita.objetstring.toString()
+                            visita.objetivoSemanal = it
+                            actividad = visita.objetivoSemanal.toString()
                         },
                         label = { Text("Actividad") },
                         modifier = Modifier

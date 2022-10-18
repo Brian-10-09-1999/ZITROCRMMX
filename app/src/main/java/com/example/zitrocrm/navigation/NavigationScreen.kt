@@ -39,8 +39,13 @@ fun NavigationScreen(){
         composable(route = Destination.LoginScreen.route) {
             if (loginViewModel.isSuccessLoading.value) {
                 LaunchedEffect(key1 = Unit) {
-                    navController.navigate(route = Destination.HomeScreen.route) {
+                    /*navController.navigate(route = Destination.HomeScreen.route) {
                         popUpTo(route = Destination.LoginScreen.route) {
+                            inclusive = true
+                        }
+                    }*/
+                    navController.navigate(route = Destination.SalasScreen.route){
+                        popUpTo(route = Destination.LoginScreen.route){
                             inclusive = true
                         }
                     }

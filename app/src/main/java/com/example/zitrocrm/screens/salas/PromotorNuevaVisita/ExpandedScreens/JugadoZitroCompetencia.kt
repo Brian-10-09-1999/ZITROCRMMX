@@ -241,7 +241,8 @@ fun JugadoZitroCompetenciaExpand(
                                 )
                             producto_paqueteria[0] = ""
                             producto_paqueteria[1] = "0"
-                        }
+                        },
+                        competencia = false
                     )
                     //--------------------ALERT PAQUETERIA---------------------//
                     AlertPaqueteria(

@@ -21,6 +21,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -183,15 +184,19 @@ fun VisitaPromotoresExpand(
     val mTimePickerDialogEntrada = TimePickerDialog(
         context,
         { _, mHour: Int, mMinute: Int ->
-            if (mHour== 0) visita.horaEntrada = 24
+            if (mHour == 0) visita.horaEntrada = 24
             else visita.horaEntrada = mHour
             horaEntrada.value = visita.horaEntrada.toString()
 
-            if(horaEntrada.value.isNotBlank()&&horasalida.value.isNotBlank()){
-                if(horasalida.value.toInt()<horaEntrada.value.toInt()){
-                    Toast.makeText(context, "La hora seleccionada es incorrecta", Toast.LENGTH_SHORT).show()
+            if (horaEntrada.value.isNotBlank() && horasalida.value.isNotBlank()) {
+                if (horasalida.value.toInt() < horaEntrada.value.toInt()) {
+                    Toast.makeText(
+                        context,
+                        "La hora seleccionada es incorrecta",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     horaEntrada.value = ""
-                }else{
+                } else {
                     viewModelNV.iniciofin(
                         inicio = visita.horaEntrada!!.toInt(),
                         fin = visita.horaSalida!!.toInt(),
@@ -201,17 +206,21 @@ fun VisitaPromotoresExpand(
 
         }, mHour, mMinute, true
     )
-    val mTimePickerDialogSalida = TimePickerDialog (
+    val mTimePickerDialogSalida = TimePickerDialog(
         context,
         { _, mHour: Int, mMinute: Int ->
-            if (mHour == 0)  visita.horaSalida = 24
+            if (mHour == 0) visita.horaSalida = 24
             else visita.horaSalida = mHour
             horasalida.value = visita.horaSalida.toString()
-            if(horaEntrada.value.isNotBlank()&&horasalida.value.isNotBlank()){
-                if(horasalida.value.toInt()<horaEntrada.value.toInt()){
-                    Toast.makeText(context, "La hora seleccionada es incorrecta", Toast.LENGTH_SHORT).show()
+            if (horaEntrada.value.isNotBlank() && horasalida.value.isNotBlank()) {
+                if (horasalida.value.toInt() < horaEntrada.value.toInt()) {
+                    Toast.makeText(
+                        context,
+                        "La hora seleccionada es incorrecta",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     horasalida.value = ""
-                }else{
+                } else {
                     viewModelNV.iniciofin(
                         inicio = visita.horaEntrada!!.toInt(),
                         fin = visita.horaSalida!!.toInt(),
@@ -337,7 +346,7 @@ fun VisitaPromotoresExpand(
                             }
                         )
                     }
-                    if(viewModelNV.tipo.value==false){
+                    if (viewModelNV.tipo.value == false) {
                         OutlinedTextField(
                             enabled = false,
                             value = viewModelNV.getObjetivoString(),//objetivoSemanaal.value,
@@ -376,6 +385,38 @@ fun VisitaPromotoresExpand(
                             textColor = Color.White
                         )
                     )
+                    OutlinedTextField(
+                        enabled = false,
+                        value = "Elaboracion de layout",
+                        onValueChange = { },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(CenterHorizontally)
+                            .padding(vertical = 8.dp)
+                            .clickable {
+                                if (visita.elabLayout == 1) {
+                                    visita.elabLayout=0
+                                }else{
+                                    visita.elabLayout = 1
+                                }
+                                viewModelNV.a()
+                            },
+                        //label = { Text("Objetivo Semanal") },
+                        trailingIcon = {
+                            Checkbox(
+                                checked = visita.elabLayout == 1,
+                                onCheckedChange = {
+                                    if (it) visita.elabLayout = 1
+                                    else visita.elabLayout = 0
+                                    viewModelNV.a()
+                                }
+                            )
+                        },
+                        colors = TextFieldDefaults.textFieldColors(
+                            textColor = Color.White
+                        )
+                    )
+
                     AlertObjetivoSemanalMenu(
                         viewModel = viewModelNV,
                         openclose = expand,
@@ -393,8 +434,9 @@ fun AlertObjetivoSemanalMenu(
     openclose: MutableState<Int>,
     objetivoSemJuego: SnapshotStateList<Message>
 ) {
-    val objetivoSemanal = if(viewModel.tipo.value)viewModel.objetivoSemanal else viewModel.objetivoSemanalFilter
-    if (openclose.value==1) {
+    val objetivoSemanal =
+        if (viewModel.tipo.value) viewModel.objetivoSemanal else viewModel.objetivoSemanalFilter
+    if (openclose.value == 1) {
         AlertDialog(
             onDismissRequest = {
                 openclose.value = 0
@@ -429,13 +471,15 @@ fun AlertObjetivoSemanalMenu(
                 if (objetivoSemanal.isNotEmpty()) {
                     LazyColumn {
                         itemsIndexed(objetivoSemanal) { index, items ->
-                            Column(modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 20.dp, vertical = 10.dp)) {
-                                Row{
-                                    val checkbox = rememberSaveable{ mutableStateOf(items.check) }
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp, vertical = 10.dp)
+                            ) {
+                                Row {
+                                    val checkbox = rememberSaveable { mutableStateOf(items.check) }
                                     Checkbox(
-                                        checked = checkbox.value!! ,
+                                        checked = checkbox.value!!,
                                         onCheckedChange = {
                                             items.check = it
                                             checkbox.value = items.check
@@ -443,7 +487,10 @@ fun AlertObjetivoSemanalMenu(
                                             viewModel.a()
                                         }
                                     )
-                                    Text(text = items.objetivo.toString(),modifier=Modifier.align(CenterVertically))
+                                    Text(
+                                        text = items.objetivo.toString(),
+                                        modifier = Modifier.align(CenterVertically)
+                                    )
                                 }
                             }
                         }
@@ -463,7 +510,7 @@ fun AlertObjetivoSemanalMenu(
             shape = RoundedCornerShape(18.dp)
         )
     }
-    if (openclose.value==2) {
+    if (openclose.value == 2) {
         AlertDialog(
             onDismissRequest = {
                 openclose.value = 0
@@ -498,15 +545,17 @@ fun AlertObjetivoSemanalMenu(
                 if (objetivoSemJuego.isNotEmpty()) {
                     LazyColumn {
                         itemsIndexed(objetivoSemJuego) { index, items ->
-                            Column(modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 20.dp, vertical = 10.dp)) {
-                                Row{
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp, vertical = 10.dp)
+                            ) {
+                                Row {
                                     val checkbox = rememberSaveable {
                                         mutableStateOf(items.check)
                                     }
                                     Checkbox(
-                                        checked = checkbox.value!! ,
+                                        checked = checkbox.value!!,
                                         onCheckedChange = {
                                             items.check = it
                                             checkbox.value = items.check
@@ -515,7 +564,10 @@ fun AlertObjetivoSemanalMenu(
                                             )
                                         }
                                     )
-                                    Text(text = items.objetivo.toString(),modifier=Modifier.align(CenterVertically))
+                                    Text(
+                                        text = items.objetivo.toString(),
+                                        modifier = Modifier.align(CenterVertically)
+                                    )
                                 }
                             }
                         }

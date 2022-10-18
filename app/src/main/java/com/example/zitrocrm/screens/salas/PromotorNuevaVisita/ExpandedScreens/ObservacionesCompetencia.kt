@@ -126,7 +126,8 @@ fun ObservacionesCompetenciaExpand(
         list_proveedor = viewModel.proveedores_selections,
         alert_proveedor = alert_proveedor,
         proveedor_info = proveedor_info,
-        onclick = {}
+        onclick = {},
+        competencia = true
     )
     AnimatedVisibility(
         visible = expanded,

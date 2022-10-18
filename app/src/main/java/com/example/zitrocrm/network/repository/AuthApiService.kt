@@ -87,8 +87,10 @@ interface AuthApiService {
 
     @GET(Val_Constants.API_SALAS_SUBJUEGOS)
     suspend fun getSubJuegos (
-        @Header("x-token") token :String,
-        @Query("tipo") tipo:Int)
+        @Header("x-token") token:String,
+        @Query("tipo") tipo:Int?,
+        @Query("juego") juego: Int?
+    )
     : Response<SubJuegos>
 
     @GET(Val_Constants.API_JUEGOS_TIPO_CARTONES)

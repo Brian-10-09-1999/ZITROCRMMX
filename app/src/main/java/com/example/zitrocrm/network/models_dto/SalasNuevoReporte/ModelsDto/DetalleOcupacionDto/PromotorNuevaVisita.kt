@@ -15,6 +15,7 @@ data class  PromotorNuevaVisita (
   @SerializedName("comentariosSonido"        ) var comentariosSonido        : ArrayList<Sonido>                   = arrayListOf(),
   @SerializedName("observacionesCompetencia" ) var observacionesCompetencia : ArrayList<ObservacionesCompetencia> = arrayListOf(),
   @SerializedName("objetivos"                ) var objetivos                : ArrayList<Int>                      = arrayListOf(),
-  @SerializedName("librerias"                ) var librerias                : ArrayList<Int>                      = arrayListOf()
+  @SerializedName("librerias"                ) var librerias                : ArrayList<Int>                      = arrayListOf(),
+  @SerializedName("send"                     ) var send                     : Boolean?                            = false
 
 )

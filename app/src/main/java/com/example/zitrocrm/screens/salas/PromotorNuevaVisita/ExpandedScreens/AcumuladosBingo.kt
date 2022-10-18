@@ -488,7 +488,8 @@ fun AcumuladosBingoExpand(
                 list_proveedor = viewModel.proveedores_selections,
                 alert_proveedor = alert_proveedor,
                 proveedor_info = proveedor_info,
-                onclick = {}
+                onclick = {},
+                competencia = false
             )
         }
     }
@@ -638,6 +639,7 @@ fun AlertProveedorSeleccionado(
     alert_proveedor: MutableState<Boolean>,
     proveedor_info: SnapshotStateList<String>,
     onclick : () ->Unit,
+    competencia : Boolean
 ) {
     if (alert_proveedor.value) {
         AlertDialog(
@@ -665,24 +667,27 @@ fun AlertProveedorSeleccionado(
                         )
                         Text(
                             text = "SELECCIONA EL PROVEEDOR",
-                            modifier = Modifier.align(Alignment.CenterVertically)
+                            modifier = Modifier.align(CenterVertically)
                         )
                     }
                 }
                 if (list_proveedor.isNotEmpty()) {
                     LazyColumn {
                         itemsIndexed(list_proveedor) { index, label ->
-                            Column(modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    proveedor_info[0] = label.nombre.toString()
-                                    proveedor_info[1] = label.id.toString()
-                                    proveedor_info[2] = label.tipo.toString()
-                                    onclick.invoke()
-                                    alert_proveedor.value = false
+                            if(competencia&&label.id==24){
+                            }else{
+                                Column(modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        proveedor_info[0] = label.nombre.toString()
+                                        proveedor_info[1] = label.id.toString()
+                                        proveedor_info[2] = label.tipo.toString()
+                                        onclick.invoke()
+                                        alert_proveedor.value = false
+                                    }
+                                    .padding(horizontal = 20.dp, vertical = 10.dp)) {
+                                    Text(text = label.nombre.toString())
                                 }
-                                .padding(horizontal = 20.dp, vertical = 10.dp)) {
-                                Text(text = label.nombre.toString())
                             }
                         }
                     }

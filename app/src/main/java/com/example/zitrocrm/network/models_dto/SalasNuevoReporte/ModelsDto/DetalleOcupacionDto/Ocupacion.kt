@@ -15,6 +15,8 @@ data class Ocupacion (
     @SerializedName("proveedor"           ) var proveedor            : String?             = null,
     @SerializedName("juego"               ) var juego                : String?             = null,
     @SerializedName("subjuego"            ) var subjuego             : String?             = null,
+    @SerializedName("arrayIndex"          ) var arrayIndex           : Int?             = null,
+
 )
 
 data class OcupacionSlots (
@@ -28,5 +30,6 @@ data class OcupacionSlots (
     @SerializedName("proveedor"           ) var proveedor             : String?             = null,
     @SerializedName("juego"               ) var juego                 : String?             = null,
     @SerializedName("subjuego"            ) var subjuego              : String?             = null,
+    @SerializedName("arrayIndex"          ) var arrayIndex            : Int?                 = null,
 
 )

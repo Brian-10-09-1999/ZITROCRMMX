@@ -71,8 +71,18 @@ fun PromotorNewScreenn(
     val observ_competencia = viewModelNV.visitaPromotor.value!!.observacionesCompetencia
     val tipo = viewModelNV.tipo
     val act = viewModelNV.a.value
-    val colorbingo by animateColorAsState(when (tipo.value) {true -> Color.White false -> Color.Green })
-    val colorslots by animateColorAsState(when (tipo.value) {true -> Color.Green false -> Color.White })
+    val colorbingo by animateColorAsState(
+        when (tipo.value) {
+            true -> Color.White
+            false -> Color.Green
+        }
+    )
+    val colorslots by animateColorAsState(
+        when (tipo.value) {
+            true -> Color.Green
+            false -> Color.White
+        }
+    )
     Scaffold(
         topBar = {
             TopAppBarNuevaVisita(
@@ -190,12 +200,14 @@ fun TopAppBarNuevaVisita(
                                     viewModelNV.objetivoSemanalSelec.clear()
                                     viewModelNV.objetivoSemanalFilter.clear()
                                     viewModelNV.juegosObjetivo.clear()
+                                    viewModelNV.cleanReport()
                                     viewModelNV.getNuevaVisitaFilters(token, 1)
                                 }
                                 false -> {
                                     viewModelNV.objetivoSemanalSelec.clear()
                                     viewModelNV.objetivoSemanalFilter.clear()
                                     viewModelNV.juegosObjetivo.clear()
+                                    viewModelNV.cleanReport()
                                     viewModelNV.getNuevaVisitaFilters(token, 2)
                                 }
                             }
@@ -343,12 +355,12 @@ fun ContentNuevaVisita(
                     tipo = tipo
                 )
             }
-            if(cards[4]&&mas_jugado.isNotEmpty()){
+            if (cards[4] && mas_jugado.isNotEmpty()) {
                 item {
                     ItemsTittle("Lo Más Jugado Generados")
                 }
                 //-----ARRAY MAS JUGADO-----//
-                itemsIndexed(mas_jugado){index,item->
+                itemsIndexed(mas_jugado) { index, item ->
                     DataItemMasjugado(
                         item = item,
                         viewModelNV = viewModelNV
@@ -365,11 +377,11 @@ fun ContentNuevaVisita(
                     coment_generales = coment_generales
                 )
             }
-            if(cards[5]&&coment_generales.isNotEmpty()){
+            if (cards[5] && coment_generales.isNotEmpty()) {
                 item {
                     ItemsTittle("Comentarios Generados")
                 }
-                itemsIndexed(coment_generales){index,item->
+                itemsIndexed(coment_generales) { index, item ->
                     ItemComentariosG(
                         item = item,
                         viewModelNV = viewModelNV
@@ -386,11 +398,11 @@ fun ContentNuevaVisita(
                     coment_sonido = coment_sonido
                 )
             }
-            if (cards[6]&&coment_sonido.isNotEmpty()){
+            if (cards[6] && coment_sonido.isNotEmpty()) {
                 item {
                     ItemsTittle("Comentarios Sonido Generados")
                 }
-                itemsIndexed(coment_sonido){index,item->
+                itemsIndexed(coment_sonido) { index, item ->
                     ItemComentSonidoG(
                         item = item,
                         viewModelNV = viewModelNV
@@ -407,8 +419,8 @@ fun ContentNuevaVisita(
                     observ_competencia = observ_competencia
                 )
             }
-            if(cards[7]){
-                if(observ_competencia.isNotEmpty()){
+            if (cards[7]) {
+                if (observ_competencia.isNotEmpty()) {
                     itemsIndexed(observ_competencia) { index, item ->
                         ItemObsevaciones(
                             item = item,
@@ -441,35 +453,67 @@ fun ContentNuevaVisita(
                     animationSpec = tween(durationMillis = 500, easing = FastOutLinearInEasing)
 
                 )
-                Button(
-                    //enabled = isValidate,
-                    onClick = {
-                        viewModelNV.postVisitaPromotoresSala(
-                            token,
-                            salaid
-                        )
-                        isRotated.value = !isRotated.value
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 50.dp)
-                        .fillMaxWidth()
-                        .height(60.dp)
-                        .graphicsLayer {
-                            rotationY = rotationAngle
-                            cameraDistance = 8 * density
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Button(
+                        //enabled = isValidate,
+                        onClick = {
+                            viewModelNV.postVisitaPromotoresSala(
+                                token,
+                                salaid,
+                                false
+                            )
+                            isRotated.value = !isRotated.value
                         },
-                    elevation = ButtonDefaults.elevation(defaultElevation = 5.dp),
-                    shape = RoundedCornerShape(10),
-                    colors = ButtonDefaults.buttonColors(
-                        backgroundColor = colorResource(id = R.color.reds)
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.CheckCircle,
-                        contentDescription = "Precio Inicio",
-                        tint = Color.White
-                    )
+                        modifier = Modifier
+                            .fillMaxWidth(.5f)
+                            .height(60.dp)
+                            .graphicsLayer {
+                                rotationY = rotationAngle
+                                cameraDistance = 8 * density
+                            },
+                        elevation = ButtonDefaults.elevation(defaultElevation = 5.dp),
+                        shape = RoundedCornerShape(10),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = colorResource(id = R.color.reds)
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.CheckCircle,
+                            contentDescription = "Precio Inicio",
+                            tint = Color.White
+                        )
+                    }
+                    Button(
+                        //enabled = isValidate,
+                        onClick = {
+                            viewModelNV.postVisitaPromotoresSala(
+                                token,
+                                salaid,
+                                true
+                            )
+                            isRotated.value = !isRotated.value
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(60.dp)
+                            .graphicsLayer {
+                                rotationY = rotationAngle
+                                cameraDistance = 8 * density
+                            },
+                        elevation = ButtonDefaults.elevation(defaultElevation = 5.dp),
+                        shape = RoundedCornerShape(10),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = colorResource(id = R.color.reds)
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Save,
+                            contentDescription = "Precio Inicio",
+                            tint = Color.White
+                        )
+                    }
                 }
+
                 Spacer(Modifier.height(10.dp))
             }
         }
@@ -586,7 +630,7 @@ fun AlertEnvio(
                     ) {
                         Icon(
                             Icons.Filled.ArrowBack, "Hora", modifier = Modifier
-                                .align(Alignment.CenterVertically)
+                                .align(CenterVertically)
                                 .padding(horizontal = 10.dp)
                                 .clickable {
                                     alertDetalleSave.value = false

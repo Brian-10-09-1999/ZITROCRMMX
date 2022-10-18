@@ -11,6 +11,7 @@ import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.Competencia.Com
 import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.FoliosTecnicos.rows
 import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.GetVisita.RowsDO2
 import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.JuegosFilter.Juegos
+import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.JuegosFilter.SubJuegosArray
 import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.ObjSemanalFilter.Message
 import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.ProveedorFilter.Rows
 import com.example.zitrocrm.network.repository.RetrofitHelper
@@ -34,19 +35,19 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
     val fecha = mutableStateOf("")
     val hora_entrada = mutableStateOf("")
     val hora_salida = mutableStateOf("")
-
     var tipo = mutableStateOf(false)
     val objetivoSemanal = mutableStateListOf<Message>()
     val juegosObjetivo = mutableStateListOf<Message>()
     val objetivoSemanalFilter = mutableStateListOf<Message>()
     val objetivoSemanalSelec = mutableStateListOf<Message>()
-
     var listHorarios = mutableStateListOf<Horarios>()
+
     fun texthours(): String {
         var text = ""
         listHorarios.forEach { item -> text = "${text}${item.horario}," }
         return text
     }
+
     fun getObjetivoString(): String {
         var obj = ""
         juegosObjetivo.filter { it.check == true }.forEach {
@@ -55,10 +56,10 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         return obj
     }
 
-    fun getObjetSelect():String{
+    fun getObjetSelect(): String {
         var obj = ""
         objetivoSemanal.filter { it.check == true }.forEach {
-            obj = obj+"${it.objetivo}, "
+            obj = obj + "${it.objetivo}, "
         }
         return obj
     }
@@ -66,6 +67,17 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
     //---------------------------------------DETALLE DE OCUPACION---------------------------------------------//
     var list_familia_paqueteria = mutableStateListOf<CompetenciaArray>()
     var listdetalleOcu = mutableStateListOf<RowsDO2>()
+
+    fun iniciofin(inicio: Int, fin: Int) {
+        listHorarios.clear()
+        visitaPromotor.value!!.visita!!.ocupacionHorario.clear()
+        if (inicio > 0 && fin > 0) {
+            for (i in inicio..fin) {
+                listHorarios.add(Horarios(i.toString(), "", "", ""))
+                visitaPromotor.value!!.visita!!.ocupacionHorario.add(i.toString() + ":00")
+            }
+        }
+    }
     fun addDetalleOcupacion(
         proveedor_info: SnapshotStateList<String>,
         paqueteria_familia: SnapshotStateList<String>,
@@ -73,10 +85,7 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
     ) {
         val juego = if (paqueteria_familia[0].isBlank()) null else paqueteria_familia[0]
         val juegoidfk = if (paqueteria_familia[1].isBlank()) null else paqueteria_familia[1]
-        val listHorarioss = mutableStateListOf<Horarios>()
-        listHorarios.forEach {
-            listHorarioss.add(it)
-        }
+
         listdetalleOcu.add(
             RowsDO2(
                 proveedor = proveedor_info[0],
@@ -90,7 +99,29 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                 horarios = ArrayList<Horarios>(/*listHorarioss*/),
             )
         )
-        if (proveedor_info[1].toInt() != 24 || proveedor_info[1].toInt() != 97) {
+        if (proveedor_info[1].toInt() == 24 || proveedor_info[1].toInt() == 97){
+            if(visitaPromotor.value!!.visita!!.tipo==1){
+                if(proveedor_info[0]=="ZITRO BINGO")
+                    else proveedores_selections.add(
+                    Rows(
+                        nombre = proveedor_info[0],
+                        id = proveedor_info[1].toInt(),
+                        tipo = proveedor_info[2].toInt()
+                    )
+                )
+            }
+            if(visitaPromotor.value!!.visita!!.tipo==2){
+                if(proveedor_info[0]=="ZITRO SLOTS")
+                else proveedores_selections.add(
+                    Rows(
+                        nombre = proveedor_info[0],
+                        id = proveedor_info[1].toInt(),
+                        tipo = proveedor_info[2].toInt()
+                    )
+                )
+            }
+        }
+        else{
             proveedores_selections.add(
                 Rows(
                     nombre = proveedor_info[0],
@@ -99,13 +130,6 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                 )
             )
         }
-        proveedores_selections_todos.add(
-            Rows(
-                nombre = proveedor_info[0],
-                id = proveedor_info[1].toInt(),
-                tipo = proveedor_info[2].toInt()
-            )
-        )
         proveedor_info[0] = ""
         proveedor_info[1] = "0"
         proveedor_info[2] = "0"
@@ -228,6 +252,7 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
     }
 
     //-------------------------------------COMENTARIOS GENERALES-----------------------------------------//
+    val subjuegos = mutableStateListOf<SubJuegosArray>()
     fun AddComentariosGenerales(
         paqueteria_familia: SnapshotStateList<String>,
         perfil_selec: SnapshotStateList<String>,
@@ -236,7 +261,8 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         comentarios_jugadores: MutableState<String>,
         tipo: MutableState<Boolean>,
         isRotated: MutableState<Boolean>,
-        coment_generales: ArrayList<Comentarios>
+        coment_generales: ArrayList<Comentarios>,
+        sub_juego: SnapshotStateList<String>
     ) {
         coment_generales.add(
             Comentarios(
@@ -251,18 +277,44 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                 procedencia = procedencia.value,
                 ingresos = ingresos.value.toInt(),
                 comentario = comentarios_jugadores.value,
-                tipo = tipo.value
+                tipo = tipo.value,
+                subjuego = ID(id = sub_juego[1].toInt(), nombre = sub_juego[0])
             )
         )
         isRotated.value = !isRotated.value;a()
         paqueteria_familia[0] = ""
         paqueteria_familia[1] = "0"
+        sub_juego[0] = ""
+        sub_juego[1] = "0"
         perfil_selec[0] = ""
         perfil_selec[1] = "0"
         procedencia.value = ""
         ingresos.value = ""
         comentarios_jugadores.value = ""
         tipo.value = true
+        subjuegos.clear()
+    }
+
+    fun getSubjuegos(idjuego: Int, context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val authService = RetrofitHelper.getAuthService()
+            val sharedPrefence = SharedPrefence(context = context)
+            try {
+                subjuegos.clear()
+                alertdialog(1, "")
+                val responseService = authService.getSubJuegos(
+                    token = sharedPrefence.getToken().toString(),
+                    tipo = null,
+                    juego = idjuego
+                )
+                if (responseService.isSuccessful) {
+                    subjuegos += responseService.body()!!.rows
+                }
+                alertdialog(0, "")
+            } catch (e: Exception) {
+                alertdialog(0, "")
+            }
+        }
     }
 
     fun RemoveComentGenerales(item: Comentarios) {
@@ -317,21 +369,14 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
     fun RemoveObservacionesComp(item: ObservacionesCompetencia) {
         visitaPromotor.value!!.observacionesCompetencia.remove(item);a()
     }
-
     val juegosFilter = mutableStateListOf<Juegos>()
     val foliostecnicossalas: MutableList<rows> = arrayListOf()
-
-    var dataProvedorOcupacion = mutableStateListOf<Ocupacion>()
-    val dataProvedorOcupacionSlots = mutableStateListOf<OcupacionSlots>()
     val proveedores_selections = mutableStateListOf<Rows>()
-    val proveedores_selections_todos = mutableStateListOf<Rows>()
     val proveedorService = mutableStateListOf<Rows>()
 
-    /**VISITA PROMOTORES**/
     val networkstate = mutableStateOf("")
     val networkstate_ID = mutableStateOf(0)
-    var cards =
-        mutableListOf<Boolean>(false, false, false, false, false, false, false, false, false, false)
+    var cards = mutableListOf(false, false, false, false, false, false, false, false, false, false)
 
     fun cardsexp(ind: Int) {
         cards.forEachIndexed { index, it ->
@@ -341,11 +386,22 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
     }
 
     fun cleanReport() {
-        visitaPromotor.value!!.visita!!.tipo = 0
-        dataProvedorOcupacion.clear()
-        dataProvedorOcupacionSlots.clear()
-        alertDetalleSave.value = true
-        proveedores_selections.clear()
+        visitaPromotor.value!!.visita = Visita()
+        visitaPromotor.value!!.ocupacion.clear()
+        visitaPromotor.value!!.ocupacionSlots.clear()
+        visitaPromotor.value!!.acumulados.clear()
+        visitaPromotor.value!!.masJugado.clear()
+        visitaPromotor.value!!.comentarios.clear()
+        visitaPromotor.value!!.comentariosSonido.clear()
+        visitaPromotor.value!!.observacionesCompetencia.clear()
+        visitaPromotor.value!!.objetivos.clear()
+        visitaPromotor.value!!.librerias.clear()
+        listdetalleOcu.clear()
+        visitaPromotor.value!!.send = false
+        fecha.value = ""
+        hora_entrada.value = ""
+        hora_salida.value = ""
+        a()
     }
 
     fun a() {
@@ -353,14 +409,15 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         a.value = true
     }
 
-    fun postVisitaPromotoresSala(token: String, salaid: String) {
+    fun postVisitaPromotoresSala(token: String, salaid: String, b: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             val authService = RetrofitHelper.getAuthService()
             try {
                 objetivoSemanal.filter { it.check == true }.forEach { visitaPromotor.value!!.objetivos.add(it.id!!.toInt()) }
                 visitaPromotor.value!!.visita!!.salaid = salaid.toInt()
                 juegosObjetivo.filter { it.check == true }.forEach { visitaPromotor.value!!.librerias.add(it.id!!.toInt()) }
-                listdetalleOcu.forEach {
+                visitaPromotor.value!!.send = b
+                listdetalleOcu.forEachIndexed { index, it ->
                     if (it.tipo == 1) {
                         it.horarios.forEach { hora ->
                             visitaPromotor.value!!.ocupacionSlots.add(
@@ -373,7 +430,8 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                                     subjuegoidfk = if (it.subjuegoidfk == 0) null else it.subjuegoidfk,
                                     proveedor = it.proveedor,
                                     juego = it.juego,
-                                    subjuego = it.subjuego
+                                    subjuego = it.subjuego,
+                                    arrayIndex = index
                                 )
                             )
                         }
@@ -391,7 +449,8 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                                     subjuegoidfk = if (it.subjuegoidfk == 0) null else it.subjuegoidfk,
                                     proveedor = it.proveedor,
                                     juego = it.juego,
-                                    subjuego = it.subjuego
+                                    subjuego = it.subjuego,
+                                    arrayIndex = index
                                 )
                             )
                         }
@@ -401,18 +460,20 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                 val responseService = authService.postSalaVisitaPromotores(
                     token = token, visitaPromotor.value!!
                 )
-                if (responseService.isSuccessful) {
+                if (responseService.isSuccessful&&responseService.body()!!.message!!.id!!>0) {
                     networkstate_ID.value = responseService.body()!!.message!!.id!!.toInt()
                     networkstate.value = responseService.body()!!.msg.toString()
                     alertDetalleSave.value = true
+                    cleanReport()
                 } else {
                     networkstate.value = responseService.body()!!.msg.toString()
                     alertDetalleSave.value = true
                 }
                 alertdialog(0, "")
+
             } catch (e: Exception) {
                 if (e.toString() == "java.lang.NullPointerException") {
-                    networkstate.value = "Comprueba que la sala y fecha de visita sean correctos."
+                    networkstate.value = "Ocurrio un error."
                 } else {
                     networkstate.value = "Verifica tu Conexion a Internet ${e}"
                 }
@@ -420,9 +481,9 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                 alertdialog(0, "")
                 Log.d("Exception", "POST VISITA PROMOTORES", e)
             }
-            if (networkstate_ID.value > 0) {
+           /* if (networkstate_ID.value > 0) {
                 cleanReport()
-            }
+            }*/
         }
     }
 
@@ -525,7 +586,8 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                 } else if (proveedorid == 24 && juegos == false) {
                     val responseService = authService.getSubJuegos(
                         token = token.toString(),
-                        tipo = tipo
+                        tipo = tipo,
+                        juego = null
                     )
                     if (responseService.body()!!.ok!!) {
                         list_familia_paqueteria.clear()
@@ -566,15 +628,6 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         }
     }
 
-    fun iniciofin(inicio: Int, fin: Int) {
-        listHorarios.clear()
-        if (inicio > 0 && fin > 0) {
-            for (i in inicio..fin) {
-                listHorarios.add(Horarios(i.toString(), "", "", ""))
-            }
-        }
-    }
-
     /**FOLIOS TECNICOS SALAS**/
     fun getFoliosTecnicos(token: String, sala: Int, cliente: Int) {
         foliostecnicossalas.clear()
@@ -594,7 +647,8 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
     //-----------------------------------------------------------FUN API GET FILTROS DE NUEVA VISITA--------------------------------------------------------//
 
     fun check_bingo(items: Message) {
-        if (items.check!! && objetivoSemanalFilter.filter { it.juegoidfk == items.id }.isEmpty()) objetivoSemanalFilter += objetivoSemanal.filter { it.juegoidfk == items.id }
+        if (items.check!! && objetivoSemanalFilter.filter { it.juegoidfk == items.id }
+                .isEmpty()) objetivoSemanalFilter += objetivoSemanal.filter { it.juegoidfk == items.id }
         else objetivoSemanalFilter.filter { it.juegoidfk == items.id }.forEach {
             objetivoSemanalFilter.remove(
                 Message(
@@ -637,10 +691,15 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                             clasificacion = clasifi
                         )
                     if (responseService.body()!!.ok!!) {
-                        responseService.body()!!.juegos.forEach { itt->
-                            if(juegosObjetivo.filter { it.objetivo == itt.nombre }.isEmpty()){
+                        responseService.body()!!.juegos.forEach { itt ->
+                            if (juegosObjetivo.filter { it.objetivo == itt.nombre }.isEmpty()) {
                                 juegosObjetivo.add(
-                                    Message(id = itt.id, objetivo = itt.nombre, check = false, juegoidfk = 0)
+                                    Message(
+                                        id = itt.id,
+                                        objetivo = itt.nombre,
+                                        check = false,
+                                        juegoidfk = 0
+                                    )
                                 )
                             }
                         }
@@ -649,9 +708,7 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                         delay(2000)
                     }
                 }
-
                 //-------------------------------------------JUEGOS ZITRO---------------------------------------------------//}
-
                 val responseService2 =
                     authService.getJuegosZitro(
                         token = token,
@@ -708,8 +765,7 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                 visitaPromotor.value!!.visita!!.tipo = tipoId
             } else {
                 visitaPromotor.value!!.visita!!.tipo = tipoId
-            }
-            a()
+            };a()
         }
     }
 
