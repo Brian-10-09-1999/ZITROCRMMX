@@ -3,7 +3,6 @@ package com.example.zitrocrm.screens.salas.PromotorNuevaVisita.ExpandedScreens
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,7 +30,6 @@ import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.FoliosTecnicos.
 import com.example.zitrocrm.screens.salas.*
 import com.example.zitrocrm.screens.salas.PromotorNuevaVisita.PromotorNuevaVisitaViewModel
 import com.example.zitrocrm.ui.theme.blackdark
-import com.example.zitrocrm.utils.Val_Constants
 
 @ExperimentalAnimationApi
 @SuppressLint("UnusedTransitionTargetStateParameter")
@@ -40,7 +38,7 @@ fun FoliosTecnicos(
     card9: String,
     onCardArrowClick: () -> Unit,
     expanded: Boolean,
-    viewModelPromotorNuevaVisita: PromotorNuevaVisitaViewModel
+    viewModelNV: PromotorNuevaVisitaViewModel
 
 ) {
     Card(
@@ -100,7 +98,7 @@ fun FoliosTecnicos(
                     }
                 }
             }
-            FoliosTecnicosExpand(expanded, viewModelPromotorNuevaVisita)
+            FoliosTecnicosExpand(expanded, viewModelNV)
         }
     }
 }

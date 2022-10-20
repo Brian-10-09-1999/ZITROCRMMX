@@ -1,10 +1,13 @@
 package com.example.zitrocrm.screens
 
+import android.app.Activity
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
@@ -98,6 +101,19 @@ private fun CustomTopAppBarSalas(navController: NavController) {
                         .align(Alignment.Center)
                         .padding(5.dp)
                 )
+                val activity = (LocalContext.current as? Activity)
+                Icon(
+                    Icons.Filled.ExitToApp,
+                    "contentDescription",
+                    tint = Color.White,
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .align(Alignment.CenterEnd)
+                        .size(22.dp).clickable{
+                            activity?.finish()
+                            datastore.clearSharedPreference()
+                        }
+                )
             }
         },
         backgroundColor = reds,
@@ -114,13 +130,13 @@ private fun ContentSalas(
             .fillMaxSize()
             .verticalScroll(state = ScrollState(1))) {
         Column(modifier = Modifier.fillMaxSize()) {
-            titleSalas()
-            titleactividad()
-            contentactividad(navController)
-            titlereporte()
-            contentreporte(navController,viewModelPromotorNuevaVisita)
-            titlelayouts()
-            contentlayouts(navController)
+            TitleSalas()
+            Titleactividad()
+            Contentactividad(navController)
+            Titlereporte()
+            Contentreporte(navController,viewModelPromotorNuevaVisita)
+            Titlelayouts()
+            Contentlayouts(navController)
             titlelgalery()
             contentgalery(navController)
             titlelcompetencia()
@@ -132,7 +148,7 @@ private fun ContentSalas(
 }
 /** CHILD CONTENT PAGE **/
 @Composable
-private fun titleSalas(){
+private fun TitleSalas(){
     Column(modifier = Modifier
         .padding(10.dp, 10.dp, 10.dp, 5.dp)
         .clip(RoundedCornerShape(10.dp))
@@ -159,7 +175,7 @@ private fun titleSalas(){
 }
 
 @Composable
-private fun titleactividad(){
+private fun Titleactividad(){
     Box(modifier = Modifier
         .padding(10.dp, 5.dp)
         .clip(RoundedCornerShape(10.dp))
@@ -182,7 +198,7 @@ private fun titleactividad(){
 }
 
 @Composable
-private fun contentactividad(navController: NavController){
+private fun Contentactividad(navController: NavController){
     Box(modifier = Modifier
         .padding(10.dp, 5.dp)
         .clip(RoundedCornerShape(10.dp))
@@ -204,7 +220,7 @@ private fun contentactividad(navController: NavController){
 }
 
 @Composable
-private fun titlereporte(){
+private fun Titlereporte(){
     Box(modifier = Modifier
         .padding(10.dp, 5.dp)
         .clip(RoundedCornerShape(10.dp))
@@ -227,9 +243,9 @@ private fun titlereporte(){
 }
 
 @Composable
-private fun contentreporte(
+private fun Contentreporte(
     navController: NavController,
-    viewModelPromotorNuevaVisita : PromotorNuevaVisitaViewModel
+    viewModelNV : PromotorNuevaVisitaViewModel
 ){
     val datastore = SharedPrefence(LocalContext.current)
     val clienteid = ""+datastore.getIDCliente().toString()
@@ -246,11 +262,19 @@ private fun contentreporte(
                 painter = painterResource(R.drawable.button_promotor_nueva_visita),
                 contentDescription = "",modifier = Modifier
                     .clickable { navController.navigate("promotor_new_screen")
-                        viewModelPromotorNuevaVisita.getFoliosTecnicos(token,salaid.toInt(),clienteid.toInt())
-                        if (viewModelPromotorNuevaVisita.tipo.value){
-                            viewModelPromotorNuevaVisita.getNuevaVisitaFilters(token, 1)
+                        viewModelNV.getFoliosTecnicos(token,salaid.toInt(),clienteid.toInt())
+                        if (viewModelNV.tipo.value){
+                            viewModelNV.getNuevaVisitaFilters(
+                                token = token,
+                                tipo = 1,
+                                clear = false
+                            )
                         }else{
-                            viewModelPromotorNuevaVisita.getNuevaVisitaFilters(token, 2)
+                            viewModelNV.getNuevaVisitaFilters(
+                                token = token,
+                                tipo = 2,
+                                clear = false
+                            )
                         }
                     }
                     .size(SizeButtons)
@@ -278,7 +302,7 @@ private fun contentreporte(
 }
 
 @Composable
-private fun titlelayouts(){
+private fun Titlelayouts(){
     Box(modifier = Modifier
         .padding(10.dp, 5.dp)
         .clip(RoundedCornerShape(10.dp))
@@ -300,7 +324,7 @@ private fun titlelayouts(){
     }
 }
 @Composable
-private fun contentlayouts(navController: NavController){
+private fun Contentlayouts(navController: NavController){
     Box(modifier = Modifier
         .padding(10.dp, 5.dp)
         .clip(RoundedCornerShape(10.dp))

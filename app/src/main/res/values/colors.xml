@@ -10,5 +10,10 @@
     <color name="reds">#530505</color>
     <color name="blackdark">#272626</color>
     <color name="graydark">#5A5A5A</color>
+    <color name="INFO">#71CCD8</color>
+    <color name="SUCCESS">#287C41</color>
+    <color name="WARNING">#958536</color>
+    <color name="LOADING">#FFFFFF</color>
+    <color name="ERROR">#5A0E0E</color>
 
 </resources>

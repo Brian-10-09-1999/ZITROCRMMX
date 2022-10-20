@@ -163,7 +163,7 @@ fun HomeScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally) {
+                    horizontalAlignment = CenterHorizontally) {
                     Spacer(
                         modifier = Modifier
                             .height(10.dp))

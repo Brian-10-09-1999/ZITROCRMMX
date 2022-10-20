@@ -1,9 +1,13 @@
 package com.example.zitrocrm.screens.salas.PromotorNuevaVisita
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Base64
 import android.util.Log
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.core.net.toFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.zitrocrm.network.models_dto.DetalleOcupacionDto.*
@@ -15,15 +19,16 @@ import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.JuegosFilter.Su
 import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.ObjSemanalFilter.Message
 import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.ProveedorFilter.Rows
 import com.example.zitrocrm.network.repository.RetrofitHelper
+import com.example.zitrocrm.repository.Models.models_nueva_visita.ArrayFoto
+import com.example.zitrocrm.repository.Models.models_nueva_visita.ArrayFoto2
 import com.example.zitrocrm.repository.SharedPrefence
 import com.example.zitrocrm.screens.login.components.alertdialog
-import com.example.zitrocrm.screens.salas.PromotorNuevaVisita.components.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
+val alertDetalleSave = mutableStateOf(false)
 @HiltViewModel
 class PromotorNuevaVisitaViewModel @Inject constructor(
 ) : ViewModel() {
@@ -161,6 +166,7 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         val horafin = if (hora_fin.value.isBlank()) null else hora_fin.value
         val premi = if (premio.value.isBlank()) null else premio.value
         isRotated.value = !isRotated.value
+
         acumulados.add(
             Acumulados(
                 proveedor = ID(
@@ -401,6 +407,8 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         fecha.value = ""
         hora_entrada.value = ""
         hora_salida.value = ""
+        juegosObjetivo.forEach { it.check = false }
+        objetivoSemanal.forEach { it.check = false }
         a()
     }
 
@@ -485,6 +493,42 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                 cleanReport()
             }*/
         }
+    }
+
+    fun postfoto(arrayfotos: SnapshotStateList<ArrayFoto?>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val authService = RetrofitHelper.getAuthService()
+            try {
+                val arra2 = mutableStateListOf<ArrayFoto2>()
+                arrayfotos.forEach {
+                    arra2.add(
+                        ArrayFoto2(
+                            it!!.Uri!!.toFile(),
+                            it.TipoFoto
+                        )
+                    )
+                }
+                val responseService =
+                    authService.postfoto(
+                        token = "sfdvsdfsdfsdf",
+                        ArrayList<ArrayFoto2>(arra2)
+                    )
+                if(responseService.isSuccessful){
+
+                }
+            }catch (e:Exception){
+                Log.d("OOOODD","DFGSDFGSDFGSDFGSDFGSDFGSDFG")
+            }
+
+        }
+    }
+    ///////DECODE
+    fun decodePicString (encodedString: String): Bitmap {
+
+        val imageBytes = Base64.decode(encodedString, Base64.DEFAULT)
+        val decodedImage = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+
+        return decodedImage
     }
 
     var a = mutableStateOf(true)
@@ -658,11 +702,17 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                     juegoidfk = it.juegoidfk
                 )
             )
-        };a()
+        }
     }
 
-    fun getNuevaVisitaFilters(token: String, tipoId: Int) {
+    fun getNuevaVisitaFilters(token: String, tipo: Int, clear:Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
+            if(clear){
+                objetivoSemanalSelec.clear()
+                objetivoSemanalFilter.clear()
+                juegosObjetivo.clear()
+                cleanReport()
+            }
             objetivoSemanal.clear()
             juegosFilter.clear()
             proveedorService.clear()
@@ -673,7 +723,7 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                 val responseServicee =
                     authService.getObjSemanal(
                         token = token,
-                        tipoId = tipoId
+                        tipoId = tipo,
                     )
                 if (responseServicee.ok!!) {
                     objetivoSemanal += responseServicee.message
@@ -681,13 +731,12 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                     alertdialog(2, "No se obtuvo objetivo semanal")
                     delay(2000)
                 }
-
-                if (tipoId == 2) {
-                    val clasifi = if (tipoId == 1) 2 else 1
+                if (tipo == 2) {
+                    val clasifi = if (tipo == 1) 2 else 1
                     val responseService =
                         authService.getJuegosZitro(
                             token = token,
-                            tipo = tipoId,
+                            tipo = tipo,
                             clasificacion = clasifi
                         )
                     if (responseService.body()!!.ok!!) {
@@ -712,7 +761,7 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                 val responseService2 =
                     authService.getJuegosZitro(
                         token = token,
-                        tipo = tipoId,
+                        tipo = tipo,
                         clasificacion = null
                     )
                 if (responseService2.isSuccessful) {
@@ -722,34 +771,26 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                     delay(2000)
                 }
                 //--------------------------------------------PROVEEDORES---------------------------------------------------//
-                val responseService5 = authService.getProveedores(token, tipoId)
+                val responseService5 = authService.getProveedores(token, tipo)
                 if (responseService5.body()!!.rows.isNotEmpty()) {
                     proveedorService += responseService5.body()!!.rows
                     proveedorService.forEach {
-                        if (it.id == 97 && tipoId == 2) {
+                        if (it.id == 97 && tipo == 2) {
                             it.nombre = "SLOTS GENERAL"
                             it.tipo = 1
-                        } else if (it.id == 97 && tipoId == 1) {
+                        } else if (it.id == 97 && tipo == 1) {
                             it.nombre = "BINGO GENERAL"
                             it.tipo = 2
                         } else {
-                            it.tipo = tipoId
+                            it.tipo = tipo
                         }
                     }
-                    when (tipoId) {
+                    when (tipo) {
                         1 -> proveedorService.add(
-                            Rows(
-                                id = 24,
-                                nombre = "ZITRO BINGO",
-                                tipo = 2
-                            )
+                            Rows(id = 24, nombre = "ZITRO BINGO", tipo = 2)
                         )
                         2 -> proveedorService.add(
-                            Rows(
-                                id = 24,
-                                nombre = "ZITRO SLOTS",
-                                tipo = 1
-                            )
+                            Rows(id = 24, nombre = "ZITRO SLOTS", tipo = 1)
                         )
                     }
                 } else {
@@ -761,11 +802,6 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                 alertdialog(0, "")
                 Log.d("Exception", "FILTER OBJETIVO FAIL", e)
             }
-            if (tipo.value) {
-                visitaPromotor.value!!.visita!!.tipo = tipoId
-            } else {
-                visitaPromotor.value!!.visita!!.tipo = tipoId
-            };a()
         }
     }
 

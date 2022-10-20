@@ -2,48 +2,59 @@ package com.example.zitrocrm.screens.salas
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Alignment.Companion.CenterVertically
+import androidx.compose.ui.Alignment.Companion.End
+import androidx.compose.ui.Alignment.Companion.Start
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.net.toFile
+import androidx.core.net.toUri
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.zitrocrm.R
 import com.example.zitrocrm.network.models_dto.DetalleOcupacionDto.*
 import com.example.zitrocrm.network.models_dto.Filter.FilterViewModel
+import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.ObjSemanalFilter.Message
+import com.example.zitrocrm.repository.Models.models_nueva_visita.ArrayFoto
+import com.example.zitrocrm.repository.Models.models_nueva_visita.TipoFoto
 import com.example.zitrocrm.screens.salas.PromotorNuevaVisita.ExpandedScreens.*
 import com.example.zitrocrm.screens.salas.PromotorNuevaVisita.PromotorNuevaVisitaViewModel
-import com.example.zitrocrm.screens.salas.PromotorNuevaVisita.components.alertDetalleSave
 import com.example.zitrocrm.ui.theme.reds
 import com.example.zitrocrm.repository.SharedPrefence
+import com.example.zitrocrm.screens.salas.PromotorNuevaVisita.alertDetalleSave
 import com.example.zitrocrm.ui.theme.blacktransp
 import com.example.zitrocrm.utils.Val_Constants.CollapseAnimation
 import com.example.zitrocrm.utils.Val_Constants.ExpandAnimation
@@ -69,6 +80,7 @@ fun PromotorNewScreenn(
     val coment_generales = viewModelNV.visitaPromotor.value!!.comentarios
     val coment_sonido = viewModelNV.visitaPromotor.value!!.comentariosSonido
     val observ_competencia = viewModelNV.visitaPromotor.value!!.observacionesCompetencia
+    val objetivoSemJuego = viewModelNV.juegosObjetivo
     val tipo = viewModelNV.tipo
     val act = viewModelNV.a.value
     val colorbingo by animateColorAsState(
@@ -94,7 +106,8 @@ fun PromotorNewScreenn(
                 tipo = tipo,
                 token = token,
                 colorbingo = colorbingo,
-                colorslots = colorslots
+                colorslots = colorslots,
+                visita = visita
             )
         },
         floatingActionButtonPosition = FabPosition.End,
@@ -129,7 +142,8 @@ fun PromotorNewScreenn(
                 mas_jugado = mas_jugado,
                 coment_generales = coment_generales,
                 coment_sonido = coment_sonido,
-                observ_competencia = observ_competencia
+                observ_competencia = observ_competencia,
+                objetivoSemJuego = objetivoSemJuego
             )
         }
     }
@@ -145,7 +159,8 @@ fun TopAppBarNuevaVisita(
     tipo: MutableState<Boolean>,
     token: String,
     colorbingo: Color,
-    colorslots: Color
+    colorslots: Color,
+    visita: Visita
 ) {
     TopAppBar(
         elevation = 0.dp,
@@ -192,25 +207,14 @@ fun TopAppBarNuevaVisita(
                         color = colorbingo
                     )
                     Switch(
-                        checked = tipo.value,
+                        checked = visita.tipo == 1,
                         onCheckedChange = {
-                            tipo.value = it
-                            when (it) {
-                                true -> {
-                                    viewModelNV.objetivoSemanalSelec.clear()
-                                    viewModelNV.objetivoSemanalFilter.clear()
-                                    viewModelNV.juegosObjetivo.clear()
-                                    viewModelNV.cleanReport()
-                                    viewModelNV.getNuevaVisitaFilters(token, 1)
-                                }
-                                false -> {
-                                    viewModelNV.objetivoSemanalSelec.clear()
-                                    viewModelNV.objetivoSemanalFilter.clear()
-                                    viewModelNV.juegosObjetivo.clear()
-                                    viewModelNV.cleanReport()
-                                    viewModelNV.getNuevaVisitaFilters(token, 2)
-                                }
-                            }
+                            if (it) visita.tipo = 1 else visita.tipo = 2
+                            viewModelNV.getNuevaVisitaFilters(
+                                token = token,
+                                tipo = visita.tipo!!.toInt(),
+                                clear = true
+                            )
                         },
                         modifier = Modifier.align(CenterVertically),
                         colors = SwitchDefaults.colors(
@@ -252,6 +256,7 @@ fun ContentNuevaVisita(
     coment_generales: ArrayList<Comentarios>,
     coment_sonido: ArrayList<Sonido>,
     observ_competencia: ArrayList<ObservacionesCompetencia>,
+    objetivoSemJuego: SnapshotStateList<Message>,
 ) {
     Scaffold {
         AlertEnvio(viewModelNV)
@@ -262,23 +267,24 @@ fun ContentNuevaVisita(
                 .background(blacktransp)
         ) {
 
-//----------------------------------VISITA PROMOTORES-------------------------------------------
+//----------------------------------VISITA PROMOTORES-----------------------------------------------
+
             item {
-                val objetivoSemJuego = viewModelNV.juegosObjetivo
                 VisitaPromotoresCard(
                     card = "Visita Promotores",
                     onCardArrowClick = {
                         viewModelNV.cardsexp(0)
                     },
                     expanded = cards[0],
-                    viewModelPromotorNuevaVisita = viewModelNV,
+                    viewModelNV = viewModelNV,
                     visita = visita,
                     context = context,
                     objetivoSemJuego = objetivoSemJuego
                 )
             }
 
-//--------------------------------OBJETIVO DE LA VISITA----------------------------------------
+//--------------------------------OBJETIVO DE LA VISITA---------------------------------------------
+
             item {
                 ActividadVisitaCard(
                     card3 = "Actividad de la Visita",
@@ -290,7 +296,8 @@ fun ContentNuevaVisita(
                 )
             }
 
-//------------------------------DETALLE OCUPACION BINGO---------------------------------------
+//------------------------------DETALLE OCUPACION BINGO---------------------------------------------
+
             item {
                 DetalleOcupacionCard(
                     card2 = "Detalle Ocupación Bingo",
@@ -318,7 +325,8 @@ fun ContentNuevaVisita(
                 }
             }
 
-//------------------------------------ACUMULADOS BINGO-------------------------------------------
+//------------------------------------ACUMULADOS BINGO----------------------------------------------
+
             if (viewModelNV.tipo.value == false) {
                 item {
                     AcumuladosBingoCard(
@@ -344,7 +352,8 @@ fun ContentNuevaVisita(
                 }
             }
 
-//--------------------------LO MAS JUGADO ZITRO Y COMPETENCIA--------------------------------
+//--------------------------LO MAS JUGADO ZITRO Y COMPETENCIA---------------------------------------
+
             item {
                 JugadoZitroCompetencia(
                     card5 = "Lo más jugado Zitro y competencia",
@@ -367,7 +376,8 @@ fun ContentNuevaVisita(
                     )
                 }
             }
-//------------------------COMENTARIOS GENERALES JUGADORES-----------------------------------//
+//------------------------COMENTARIOS GENERALES JUGADORES-------------------------------------------
+
             item {
                 ComentariosGeneralesJugadores(
                     card6 = "Comentarios Generales Jugadores",
@@ -388,7 +398,9 @@ fun ContentNuevaVisita(
                     )
                 }
             }
-//---------------------COMENTARIOS DE SONIDO MAQUINAS Y PROVEEDORES CERCANOS---------------------//
+
+//---------------------COMENTARIOS DE SONIDO MAQUINAS Y PROVEEDORES CERCANOS------------------------
+
             item {
                 ComentariosSonidoZitroComp(
                     card7 = "Comentarios Sonido Nuestras Máquinas y Proveedores Cercanos",
@@ -409,7 +421,8 @@ fun ContentNuevaVisita(
                     )
                 }
             }
-//----------------------------------OBSERVACIONES GENERALES----------------------------------//
+//----------------------------------OBSERVACIONES GENERALES-----------------------------------------
+
             item {
                 ObservacionesCompetencia(
                     card8 = "Observaciones Competencia",
@@ -432,40 +445,64 @@ fun ContentNuevaVisita(
                     visita_observacion(visita)
                 }
             }
-            //FOLIOS TECNICOS
+//------------------------------------------FOLIOS TECNICOS-----------------------------------------
+
             item {
                 FoliosTecnicos(
                     card9 = "Folios Técnicos",
                     onCardArrowClick = { viewModelNV.cardsexp(8) },
-                    expanded = cards[8], viewModelNV
+                    expanded = cards[8],
+                    viewModelNV = viewModelNV
                 )
             }
-            val isValidate by derivedStateOf {
-                visita.fecha!!.day!! > 0
-                        && visita.fecha!!.month!! > 0
-                        && visita.fecha!!.year!! > 0
-            }
+
+//----------------------------------BTN ENVIAR && BTN GUARDAR---------------------------------------
+
             item {
-                Spacer(Modifier.height(10.dp))
+                val isValidate by derivedStateOf {
+                    visita.fecha!!.day!! > 0
+                            && visita.fecha!!.month!! > 0
+                            && visita.fecha!!.year!! > 0
+                            /*&& viewModelNV.visitaPromotor.value!!.ocupacion.isNotEmpty()
+                            && viewModelNV.visitaPromotor.value!!.ocupacionSlots.isNotEmpty()
+                            && viewModelNV.visitaPromotor.value!!.acumulados.isNotEmpty()
+                            && viewModelNV.visitaPromotor.value!!.masJugado.isNotEmpty()
+                            && viewModelNV.visitaPromotor.value!!.comentarios.isNotEmpty()
+                            && viewModelNV.visitaPromotor.value!!.comentariosSonido.isNotEmpty()
+                            && viewModelNV.visitaPromotor.value!!.observacionesCompetencia.isNotEmpty()
+                            && viewModelNV.visitaPromotor.value!!.objetivos.isNotEmpty()
+                            && viewModelNV.visitaPromotor.value!!.librerias.isNotEmpty()*/
+                            && viewModelNV.listdetalleOcu.isNotEmpty()
+                            && viewModelNV.fecha.value.isNotBlank()
+                            && viewModelNV.hora_entrada.value.isNotBlank()
+                            && viewModelNV.hora_salida.value.isNotBlank()
+                            && viewModelNV.juegosObjetivo.filter { it.check == true }.isNotEmpty()
+                            && viewModelNV.objetivoSemanal.filter { it.check == true }.isNotEmpty()
+                }
                 val isRotated = rememberSaveable { mutableStateOf(false) }
                 val rotationAngle by animateFloatAsState(
                     targetValue = if (isRotated.value) 360F else 0F,
                     animationSpec = tween(durationMillis = 500, easing = FastOutLinearInEasing)
-
                 )
-                Row(modifier = Modifier.fillMaxWidth()) {
+                Spacer(Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    //--------------------------BTN ENVIAR-----------------------------//
                     Button(
-                        //enabled = isValidate,
+                        enabled = isValidate,
                         onClick = {
                             viewModelNV.postVisitaPromotoresSala(
-                                token,
-                                salaid,
-                                false
+                                token = token,
+                                salaid = salaid,
+                                b = false
                             )
                             isRotated.value = !isRotated.value
                         },
                         modifier = Modifier
-                            .fillMaxWidth(.5f)
+                            .padding(horizontal = 5.dp)
                             .height(60.dp)
                             .graphicsLayer {
                                 rotationY = rotationAngle
@@ -480,21 +517,26 @@ fun ContentNuevaVisita(
                         Icon(
                             imageVector = Icons.Filled.CheckCircle,
                             contentDescription = "Precio Inicio",
-                            tint = Color.White
+                            tint = Color.White,
+                            modifier = Modifier.padding(horizontal = 5.dp)
                         )
+                        Text(text = "Enviar")
                     }
+                    Spacer(Modifier.width(2.dp))
+
+                    //------------------------BTN GUARDAR-----------------------------//
                     Button(
-                        //enabled = isValidate,
+                        enabled = isValidate,
                         onClick = {
                             viewModelNV.postVisitaPromotoresSala(
-                                token,
-                                salaid,
-                                true
+                                token = token,
+                                salaid = salaid,
+                                b = true
                             )
                             isRotated.value = !isRotated.value
                         },
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .padding(horizontal = 5.dp)
                             .height(60.dp)
                             .graphicsLayer {
                                 rotationY = rotationAngle
@@ -509,11 +551,16 @@ fun ContentNuevaVisita(
                         Icon(
                             imageVector = Icons.Filled.Save,
                             contentDescription = "Precio Inicio",
-                            tint = Color.White
+                            tint = Color.White,
+                            modifier = Modifier.padding(horizontal = 5.dp)
                         )
+                        Text(text = "Guardar")
                     }
                 }
-
+                AlertFotos(
+                    context = context,
+                    viewModelNV = viewModelNV
+                )
                 Spacer(Modifier.height(10.dp))
             }
         }
@@ -521,89 +568,275 @@ fun ContentNuevaVisita(
 }
 
 @Composable
-fun visita_observacion(visita: Visita) {
-    Column(modifier = Modifier.padding(horizontal = 25.dp)) {
-        var propuestas by remember { mutableStateOf(visita.propuestas) }
-        var conclusion by remember { mutableStateOf(visita.conclusion) }
-        var observacionesGenerales by remember { mutableStateOf(visita.observacionesGenerales) }
-        val focusManager = LocalFocusManager.current
-        OutlinedTextField(
-            value = propuestas.toString(),
-            onValueChange = {
-                visita.propuestas = it
-                propuestas = visita.propuestas
-            },
-            label = { Text("Propuestas") },
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions.Default.copy(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Next
-            ),
-            keyboardActions = KeyboardActions(
-                onNext = { focusManager.moveFocus(FocusDirection.Down) }
-            ),
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Filled.Comment,
-                    contentDescription = "observaciones"
-                )
-            },
-            colors = TextFieldDefaults.textFieldColors(
-                textColor = Color.White
+fun AlertFotos(
+    context: Context,
+    viewModelNV: PromotorNuevaVisitaViewModel
+) {
+    AlertDialog(
+        onDismissRequest = {},
+        title = null,
+        buttons = {
+            val image = remember { mutableStateOf<Uri?>(null) }
+            val arrayfotos = remember {
+                mutableStateListOf<ArrayFoto?>()
+            }
+            val pickPictureLauncher = rememberLauncherForActivityResult(
+                ActivityResultContracts.GetContent()
+            ) { imageUri ->
+                if (imageUri != null) {
+                    image.value = imageUri
+                } else {
+                    Toast.makeText(
+                        context,
+                        "No seleccionaste una foto",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+            var viewImage by remember {
+                mutableStateOf(false)
+            }
+            val text = if (image.value == null) "Selecciona la imagen"
+            else "Visualiza la imagen seleccionada"
+
+            val tipo_foto = listOf<TipoFoto>(
+                TipoFoto(
+                    categoria = 1,
+                    idTipoFoto = 1,
+                    TipoFoto = "Alineación de isla: Vista Frontal"
+                ),
+                TipoFoto(
+                    categoria = 1,
+                    idTipoFoto = 3,
+                    TipoFoto = "Alineación de isla: Vista Lateral"
+                ),
+                TipoFoto(categoria = 1, idTipoFoto = 4, TipoFoto = "Alineación de reposapiés"),
+                TipoFoto(categoria = 1, idTipoFoto = 5, TipoFoto = "Espacio entre máquinas"),
+                TipoFoto(categoria = 1, idTipoFoto = 6, TipoFoto = "Peinado general de isla"),
+                TipoFoto(
+                    categoria = 2,
+                    idTipoFoto = 7,
+                    TipoFoto = "Vista frontal (Derecha/Izquierda)"
+                ),
+                TipoFoto(
+                    categoria = 2,
+                    idTipoFoto = 8,
+                    TipoFoto = "Vista lateral (Derecha/Izquierda)"
+                ),
+                TipoFoto(
+                    categoria = 3,
+                    idTipoFoto = 9,
+                    TipoFoto = "Alineación de sing respecto a Isla"
+                ),
+                TipoFoto(categoria = 3, idTipoFoto = 10, TipoFoto = "Alineación de pantallas"),
+                TipoFoto(categoria = 3, idTipoFoto = 11, TipoFoto = "Estabilizadores"),
+                TipoFoto(categoria = 4, idTipoFoto = 12, TipoFoto = "Peinado Rack"),
+                TipoFoto(categoria = 4, idTipoFoto = 13, TipoFoto = "Peinado APC")
             )
-        )
-        OutlinedTextField(
-            value = conclusion.toString(),
-            onValueChange = {
-                visita.conclusion = it
-                conclusion = visita.conclusion
-            },
-            label = { Text("Conclusión") },
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions.Default.copy(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Next
-            ),
-            keyboardActions = KeyboardActions(
-                onNext = { focusManager.moveFocus(FocusDirection.Down) }
-            ),
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Filled.Comment,
-                    contentDescription = "observaciones"
-                )
-            },
-            colors = TextFieldDefaults.textFieldColors(
-                textColor = Color.White
-            )
-        )
-        OutlinedTextField(
-            value = observacionesGenerales.toString(),
-            onValueChange = {
-                visita.observacionesGenerales = it
-                observacionesGenerales = visita.observacionesGenerales
-            },
-            label = { Text("Observaciones Generales") },
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions.Default.copy(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Next
-            ),
-            keyboardActions = KeyboardActions(
-                onNext = { focusManager.moveFocus(FocusDirection.Down) }
-            ),
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Filled.Comment,
-                    contentDescription = "observaciones"
-                )
-            },
-            colors = TextFieldDefaults.textFieldColors(
-                textColor = Color.White
-            )
-        )
-        Spacer(Modifier.height(15.dp))
-    }
+            val tipo_seleccionado = remember {
+                mutableStateOf<TipoFoto?>(null)
+            }
+            var tipo_list by remember {
+                mutableStateOf(false)
+            }
+            Box(
+                modifier = Modifier
+                    .height(60.dp)
+                    .fillMaxWidth()
+                    .background(color = colorResource(R.color.reds))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .align(Alignment.Center)
+                ) {
+                    Icon(
+                        Icons.Filled.ArrowBack, "Hora", modifier = Modifier
+                            .align(CenterVertically)
+                            .padding(horizontal = 10.dp)
+                            .clickable {
+                                /* openclose.value = 0
+                                viewModel.a()*/
+                            }
+                    )
+                    Text(
+                        text = "DOCUMENTACION FOTOGRAFICA",
+                        modifier = Modifier.align(CenterVertically)
+                    )
+                }
+            }
+            LazyColumn(modifier = Modifier.padding(horizontal = 10.dp)) {
+                item {
+                    OutlinedTextField(
+                        enabled = false,
+                        value = text,
+                        onValueChange = { },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 2.5.dp),
+                        trailingIcon = {
+                            IconButton(onClick = {
+                                viewImage = !viewImage
+                            }) {
+                                Icon(Icons.Filled.Visibility, "contentDescription")
+                            }
+                        },
+                        colors = TextFieldDefaults.textFieldColors(
+                            textColor = Color.White
+                        ),
+                        leadingIcon = {
+                            IconButton(onClick = {
+                                pickPictureLauncher.launch("image/*")
+                            }) {
+                                Icon(Icons.Filled.AddAPhoto, "contentDescription")
+                            }
+                        }
+                    )
+                }
+                item {
+                    AnimatedVisibility(visible = image.value != null && viewImage) {
+                        Card(Modifier.fillMaxWidth()) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(image.value)
+                                    .crossfade(true)
+                                    .build(),
+                                contentDescription = "barcode image",
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(10))
+                                    .height(250.dp)
+                                    .padding(8.dp),
+                            )
+                        }
+                    }
+                }
+                item {
+                    val tip = if (tipo_seleccionado.value == null) "Selecciona tipo de imagen"
+                    else tipo_seleccionado.value!!.TipoFoto.toString()
+                    OutlinedTextField(
+                        enabled = false,
+                        value = tip,
+                        onValueChange = { },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 2.5.dp)
+                            .clickable {
+                                tipo_list = !tipo_list
+                                viewImage = false
+                            },
+                        trailingIcon = {
+                            Icon(Icons.Filled.Image, "contentDescription")
+                        },
+                        colors = TextFieldDefaults.textFieldColors(
+                            textColor = Color.White
+                        )
+                    )
+                }
+                if (tipo_list) {
+                    itemsIndexed(tipo_foto) { index, item ->
+                        Card(modifier = Modifier
+                            .padding(vertical = 2.dp)
+                            .fillMaxWidth()
+                            .clickable {
+                                tipo_list = false
+                                tipo_seleccionado.value = item
+                            }
+                        ) {
+                            Text(text = item.TipoFoto.toString())
+                        }
+                    }
+                }
+                item {
+                    Button(
+                        enabled =
+                        if (tipo_seleccionado.value != null && image.value != null) true
+                        else false,
+                        onClick = {
+                            tipo_list = false
+                            viewImage = false
+                            arrayfotos.add(
+                                ArrayFoto(
+                                    Uri = image.value!!,
+                                    TipoFoto = tipo_seleccionado.value
+                                )
+                            )
+                            tipo_seleccionado.value = null
+                            image.value = null
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 5.dp)
+                            .height(60.dp),
+                        elevation = ButtonDefaults.elevation(defaultElevation = 5.dp),
+                        shape = RoundedCornerShape(10),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = colorResource(id = R.color.reds)
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = "Precio Inicio",
+                            tint = Color.White,
+                            modifier = Modifier.padding(horizontal = 5.dp)
+                        )
+                        Text(text = " AGREGAR IMAGEN")
+                    }
+                }
+                if (arrayfotos.isNotEmpty()) {
+                    item {
+                        LazyRow {
+                            itemsIndexed(arrayfotos) { index, it ->
+                                Card(
+                                    modifier = Modifier
+                                        .padding(5.dp)
+                                        .fillMaxWidth()
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = it!!.TipoFoto!!.TipoFoto.toString(),
+                                            modifier = Modifier
+                                                .padding(end = 20.dp)
+                                                .align(Start)
+                                        )
+                                        AsyncImage(
+                                            model = ImageRequest.Builder(LocalContext.current)
+                                                .data(it!!.Uri!!)
+                                                .crossfade(true)
+                                                .build(),
+                                            contentDescription = "barcode image",
+                                            contentScale = ContentScale.Fit,
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(10))
+                                                .height(250.dp)
+                                                .padding(8.dp)
+                                                .align(CenterHorizontally),
+                                        )
+                                        IconButton(
+                                            onClick = {
+                                                viewModelNV.postfoto(arrayfotos)
+                                                //arrayfotos.remove(it)
+                                            }, modifier = Modifier
+                                                .align(End)
+                                                .size(25.dp)
+                                        ) {
+                                            Icon(Icons.Filled.Delete, contentDescription = null)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        properties = DialogProperties(
+            dismissOnBackPress = true,
+            dismissOnClickOutside = false
+        ),
+        modifier = Modifier.height(550.dp),
+        shape = RoundedCornerShape(18.dp)
+    )
 }
 
 

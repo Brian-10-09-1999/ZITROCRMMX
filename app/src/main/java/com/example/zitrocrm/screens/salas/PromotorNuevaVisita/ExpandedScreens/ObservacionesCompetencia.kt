@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
@@ -46,6 +47,19 @@ fun ObservacionesCompetencia(
     viewModelNV: PromotorNuevaVisitaViewModel,
     observ_competencia: ArrayList<ObservacionesCompetencia>
 ) {
+    val alert_proveedor = remember { mutableStateOf(false) }
+    val proveedor_info = remember { mutableStateListOf("", "0", "0") }
+    val observaciones_competencia = remember{ mutableStateOf("") }
+    val isValidate by derivedStateOf {
+        proveedor_info[0].isNotBlank()
+                && proveedor_info[1].toInt()>0
+                && observaciones_competencia.value.isNotBlank()
+    }
+    val isRotated = rememberSaveable { mutableStateOf(false) }
+    val rotationAngle by animateFloatAsState(
+        targetValue = if (isRotated.value) 360F else 0F,
+        animationSpec = tween(durationMillis = 500, easing = FastOutLinearInEasing)
+    )
     Card(
         backgroundColor = blackdark,
         shape = RoundedCornerShape(15.dp),
@@ -106,7 +120,13 @@ fun ObservacionesCompetencia(
             ObservacionesCompetenciaExpand(
                 expanded = expanded,
                 viewModel = viewModelNV,
-                observ_competencia = observ_competencia
+                observ_competencia = observ_competencia,
+                alert_proveedor = alert_proveedor,
+                proveedor_info = proveedor_info,
+                observaciones_competencia = observaciones_competencia,
+                isValidate = isValidate,
+                rotationAngle = rotationAngle,
+                isRotated = isRotated
             )
         }
     }
@@ -117,11 +137,15 @@ fun ObservacionesCompetencia(
 fun ObservacionesCompetenciaExpand(
     expanded: Boolean = true,
     viewModel: PromotorNuevaVisitaViewModel,
-    observ_competencia: ArrayList<ObservacionesCompetencia>
+    observ_competencia: ArrayList<ObservacionesCompetencia>,
+    alert_proveedor: MutableState<Boolean>,
+    proveedor_info: SnapshotStateList<String>,
+    observaciones_competencia: MutableState<String>,
+    isValidate: Boolean,
+    rotationAngle: Float,
+    isRotated: MutableState<Boolean>
 ) {
-    val alert_proveedor = remember { mutableStateOf(false) }
-    val proveedor_info = remember { mutableStateListOf("", "0", "0") }
-    val observaciones_competencia = remember{ mutableStateOf("") }
+    //---------------------------ALERT SELECCIONAR PROVEEDOR------------------------------------//
     AlertProveedorSeleccionado(
         list_proveedor = viewModel.proveedores_selections,
         alert_proveedor = alert_proveedor,
@@ -129,6 +153,7 @@ fun ObservacionesCompetenciaExpand(
         onclick = {},
         competencia = true
     )
+    //------------------------------------------------------------------------------------------//
     AnimatedVisibility(
         visible = expanded,
         enter = enterExpand + enterFadeIn,
@@ -138,7 +163,7 @@ fun ObservacionesCompetenciaExpand(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color.Black)
-                .padding(8.dp)
+                .padding(start = 10.dp, top = 10.dp, end = 10.dp)
         ) {
             Box(
                 Modifier
@@ -149,6 +174,7 @@ fun ObservacionesCompetenciaExpand(
                         .fillMaxSize()
                         .padding(10.dp)
                 ) {
+                    //------------------------INPUT SELECCIONAR PROVEEDOR------------------------//
                     OutlinedTextField(
                         enabled = false,
                         value = proveedor_info[0],
@@ -167,6 +193,7 @@ fun ObservacionesCompetenciaExpand(
                             textColor = Color.White
                         )
                     )
+                    //-----------------------------INPUT OBSERVACIONES---------------------------//
                     OutlinedTextField(
                         value = observaciones_competencia.value,
                         onValueChange = {
@@ -188,16 +215,7 @@ fun ObservacionesCompetenciaExpand(
                         )
                     )
                     Spacer(Modifier.height(10.dp))
-                    val isValidate by derivedStateOf {
-                        proveedor_info[0].isNotBlank()
-                                && proveedor_info[1].toInt()>0
-                                && observaciones_competencia.value.isNotBlank()
-                    }
-                    val isRotated = rememberSaveable { mutableStateOf(false) }
-                    val rotationAngle by animateFloatAsState(
-                        targetValue = if (isRotated.value) 360F else 0F,
-                        animationSpec = tween(durationMillis = 500, easing = FastOutLinearInEasing)
-                    )
+                    //--------------------------BTN AGREGAR OBSERVACIONES------------------------//
                     Button(
                         enabled = isValidate,
                         onClick = {
@@ -227,6 +245,7 @@ fun ObservacionesCompetenciaExpand(
                             tint = Color.White
                         )
                     }
+                    //---------------------------------------------------------------------------//
                 }
             }
         }

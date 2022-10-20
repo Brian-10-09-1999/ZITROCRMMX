@@ -1,5 +1,6 @@
 package com.example.zitrocrm.network.repository
 
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.example.zitrocrm.network.models_dto.CompetenciaJuegosBingo.PrioridadesDTO
 import com.example.zitrocrm.network.models_dto.DetalleOcupacionDto.*
 import com.example.zitrocrm.network.models_dto.Filter.ClienteFilter.ClienteFilter
@@ -16,6 +17,8 @@ import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.JuegosFilter.Su
 import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.PostVisitaPromotor
 import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.ProveedorFilter.ProveedoresDto
 import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.ProveedorFilter.Rows
+import com.example.zitrocrm.repository.Models.models_nueva_visita.ArrayFoto
+import com.example.zitrocrm.repository.Models.models_nueva_visita.ArrayFoto2
 import com.example.zitrocrm.utils.Val_Constants
 import retrofit2.Response
 import retrofit2.http.*
@@ -77,6 +80,13 @@ interface AuthApiService {
         @Header("x-token") token :String,
         @Body PromotorNuevaVisita: PromotorNuevaVisita)
     : Response<PostVisitaPromotor>
+
+    //
+    @POST(Val_Constants.API_SALAS_VISITAS_PROMOTORES_VISITA)
+    suspend fun postfoto(
+        @Header("x-token") token:String,
+        @Body ArrayFoto: ArrayList<ArrayFoto2>
+    ): Response<PostVisitaPromotor>
 
     @GET(Val_Constants.API_SALAS_COMPETENCIA_LIBRERIAS)
     suspend fun getSalasLibrerias(

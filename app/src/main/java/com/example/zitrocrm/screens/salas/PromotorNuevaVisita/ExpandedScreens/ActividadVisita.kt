@@ -7,14 +7,20 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,6 +38,9 @@ fun ActividadVisitaCard(
     expanded: Boolean,
     visita: Visita,
 ) {
+    val queHacer = remember { mutableStateOf(visita.queHacer.toString()) }
+    val actividad = remember { mutableStateOf(visita.objetivoSemanal.toString()) }
+    //------------------------------------------------------------------------------------------//
     Card(
         backgroundColor = blackdark,
         shape = RoundedCornerShape(15.dp),
@@ -94,7 +103,9 @@ fun ActividadVisitaCard(
             }
             ObjetivoVisitaExpand(
                 expanded = expanded,
-                visita = visita
+                visita = visita,
+                queHacer = queHacer,
+                actividad = actividad
             )
         }
     }
@@ -105,9 +116,9 @@ fun ActividadVisitaCard(
 fun ObjetivoVisitaExpand(
     expanded: Boolean = true,
     visita: Visita,
+    queHacer: MutableState<String>,
+    actividad: MutableState<String>,
 ) {
-    var queHacer by remember { mutableStateOf(visita.queHacer.toString()) }
-    var actividad by remember { mutableStateOf(visita.objetivoSemanal.toString()) }
     AnimatedVisibility(
         visible = expanded,
         enter = enterExpand + enterFadeIn,
@@ -128,11 +139,12 @@ fun ObjetivoVisitaExpand(
                         .fillMaxSize()
                         .padding(horizontal = 10.dp, vertical = 10.dp)
                 ) {
+                    //------------------------------------INPUT ACTIVIDAD VISITA-------------------------------//
                     OutlinedTextField(
-                        value = actividad,
+                        value = actividad.value,
                         onValueChange = {
                             visita.objetivoSemanal = it
-                            actividad = visita.objetivoSemanal.toString()
+                            actividad.value = visita.objetivoSemanal.toString()
                         },
                         label = { Text("Actividad") },
                         modifier = Modifier
@@ -141,37 +153,124 @@ fun ObjetivoVisitaExpand(
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Filled.TextFormat,
-                                contentDescription = "Botón para elegir fecha"
+                                contentDescription = null
                             )
                         },
                         colors = TextFieldDefaults.textFieldColors(
                             textColor = Color.White
                         )
                     )
+                    //-------------------------------INPUT QUE HACES PARA REALIZAR ACT--------------------------//
                     OutlinedTextField(
-                        value = queHacer,
+                        value = queHacer.value,
                         onValueChange = {
                             visita.queHacer = it
-                            queHacer = visita.queHacer.toString()
+                            queHacer.value = visita.queHacer.toString()
                         },
                         label = { Text("¿Qué haces para realizar la actividad?") },
                         modifier = Modifier
                             .padding(vertical = 2.5.dp)
                             .fillMaxWidth(),
                         leadingIcon = {
-                            IconButton(onClick = { }) {
-                                Icon(
-                                    imageVector = Icons.Filled.TextFormat,
-                                    contentDescription = "Botón para elegir fecha"
-                                )
-                            }
+                            Icon(
+                                imageVector = Icons.Filled.TextFormat,
+                                contentDescription = null
+                            )
                         },
                         colors = TextFieldDefaults.textFieldColors(
                             textColor = Color.White
                         )
                     )
+                    //--------------------------------------------------------------------------------------------//
                 }
             }
         }
+    }
+}
+
+@Composable
+fun visita_observacion(visita: Visita) {
+    Column(modifier = Modifier.padding(horizontal = 25.dp)) {
+        var propuestas by remember { mutableStateOf(visita.propuestas) }
+        var conclusion by remember { mutableStateOf(visita.conclusion) }
+        var observacionesGenerales by remember { mutableStateOf(visita.observacionesGenerales) }
+        val focusManager = LocalFocusManager.current
+        //-----------------------------------PROPUESTA VISITA---------------------------------------
+        OutlinedTextField(
+            value = propuestas.toString(),
+            onValueChange = {
+                visita.propuestas = it
+                propuestas = visita.propuestas
+            },
+            label = { Text("Propuestas") },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+            ),
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Filled.Comment,
+                    contentDescription = "observaciones"
+                )
+            },
+            colors = TextFieldDefaults.textFieldColors(
+                textColor = Color.White
+            )
+        )
+        OutlinedTextField(
+            value = conclusion.toString(),
+            onValueChange = {
+                visita.conclusion = it
+                conclusion = visita.conclusion
+            },
+            label = { Text("Conclusión") },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+            ),
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Filled.Comment,
+                    contentDescription = "observaciones"
+                )
+            },
+            colors = TextFieldDefaults.textFieldColors(
+                textColor = Color.White
+            )
+        )
+        OutlinedTextField(
+            value = observacionesGenerales.toString(),
+            onValueChange = {
+                visita.observacionesGenerales = it
+                observacionesGenerales = visita.observacionesGenerales
+            },
+            label = { Text("Observaciones Generales") },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+            ),
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Filled.Comment,
+                    contentDescription = "observaciones"
+                )
+            },
+            colors = TextFieldDefaults.textFieldColors(
+                textColor = Color.White
+            )
+        )
+        Spacer(Modifier.height(15.dp))
     }
 }

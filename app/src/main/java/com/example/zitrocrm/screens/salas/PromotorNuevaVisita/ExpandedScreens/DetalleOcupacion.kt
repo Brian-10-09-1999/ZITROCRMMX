@@ -550,7 +550,7 @@ fun DetalleOcupacion(
     item: RowsDO2,
     viewModelNV: PromotorNuevaVisitaViewModel
 ) {
-    var dropProv by rememberSaveable { mutableStateOf(false) }
+    var dropProv by rememberSaveable { mutableStateOf(true) }
     val focusManager = LocalFocusManager.current
     var maquinas1 by remember { mutableStateOf(item.maquinas1.toString()) }
     if (item.maquinas1 == 0) maquinas1 = ""

@@ -12,9 +12,12 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.zitrocrm.navigation.Alert_State
 import com.example.zitrocrm.navigation.NavigationScreen
 import com.example.zitrocrm.screens.login.components.ProgressBarLoading
 import com.example.zitrocrm.ui.theme.ZITROCRMTheme
+import com.example.zitrocrm.utils.AlertState
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 
@@ -26,11 +29,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ZITROCRMTheme() {
+                val alertState: AlertState = viewModel()
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
                     NavigationScreen()
+                    //Alert_State(alertState)
                     ProgressBarLoading(isLoading = 0)
                 }
             }

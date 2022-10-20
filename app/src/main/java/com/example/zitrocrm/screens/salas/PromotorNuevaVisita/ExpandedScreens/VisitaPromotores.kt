@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
@@ -41,6 +42,7 @@ import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.ObjSemanalFilte
 import com.example.zitrocrm.screens.salas.*
 import com.example.zitrocrm.screens.salas.PromotorNuevaVisita.PromotorNuevaVisitaViewModel
 import com.example.zitrocrm.ui.theme.blackdark
+import com.example.zitrocrm.utils.AlertState
 import java.util.*
 
 
@@ -51,11 +53,82 @@ fun VisitaPromotoresCard(
     card: String,
     onCardArrowClick: () -> Unit,
     expanded: Boolean,
-    viewModelPromotorNuevaVisita: PromotorNuevaVisitaViewModel,
+    viewModelNV: PromotorNuevaVisitaViewModel,
     visita: Visita,
     context: Context,
     objetivoSemJuego: SnapshotStateList<Message>,
 ) {
+    val expand = remember { mutableStateOf(0) }
+    val icon = if (expanded) Icons.Filled.KeyboardArrowUp
+    else Icons.Filled.KeyboardArrowDown
+    val fecha = viewModelNV.fecha
+    val horaEntrada = viewModelNV.hora_entrada
+    val horasalida = viewModelNV.hora_salida
+    val mYear: Int
+    val mMonth: Int
+    val mDay: Int
+    val mCalendar = Calendar.getInstance()
+    val mHour = mCalendar.get(Calendar.HOUR_OF_DAY)
+    val mMinute = mCalendar.get(Calendar.HOUR_OF_DAY)
+    mCalendar.time = Date()
+    mYear = mCalendar.get(Calendar.YEAR)
+    mMonth = mCalendar.get(Calendar.MONTH)
+    mDay = mCalendar.get(Calendar.DAY_OF_MONTH)
+    val mDatePickerDialog = DatePickerDialog(
+        context,
+        { _: DatePicker, mYear: Int, mMonth: Int, mDayOfMonth: Int ->
+            visita.fecha = Fecha(year = mYear, month = mMonth + 1, day = mDayOfMonth)
+            fecha.value = "${mDayOfMonth}-${mMonth}-${mYear}"
+        }, mYear, mMonth, mDay
+    )
+    val mTimePickerDialogEntrada = TimePickerDialog(
+        context,
+        { _, mHour: Int, mMinute: Int ->
+            if (mHour == 0) visita.horaEntrada = 24
+            else visita.horaEntrada = mHour
+            horaEntrada.value = visita.horaEntrada.toString()
+            if (horaEntrada.value.isNotBlank() && horasalida.value.isNotBlank()) {
+                if (horasalida.value.toInt() < horaEntrada.value.toInt()) {
+                    Toast.makeText(
+                        context,
+                        "La hora seleccionada es incorrecta",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    horaEntrada.value = ""
+                } else {
+                    viewModelNV.iniciofin(
+                        inicio = visita.horaEntrada!!.toInt(),
+                        fin = visita.horaSalida!!.toInt(),
+                    )
+                }
+            }
+
+        }, mHour, mMinute, true
+    )
+    val mTimePickerDialogSalida = TimePickerDialog(
+        context,
+        { _, mHour: Int, mMinute: Int ->
+            if (mHour == 0) visita.horaSalida = 24
+            else visita.horaSalida = mHour
+            horasalida.value = visita.horaSalida.toString()
+            if (horaEntrada.value.isNotBlank() && horasalida.value.isNotBlank()) {
+                if (horasalida.value.toInt() < horaEntrada.value.toInt()) {
+                    Toast.makeText(
+                        context,
+                        "La hora seleccionada es incorrecta",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    horasalida.value = ""
+                } else {
+                    viewModelNV.iniciofin(
+                        inicio = visita.horaEntrada!!.toInt(),
+                        fin = visita.horaSalida!!.toInt(),
+                    )
+                }
+            }
+        }, mHour, mMinute, true
+    )
+    //-------------------------------------CONTENT----------------------------------------------//
     Column(
         modifier = Modifier
             .padding(bottom = 10.dp)
@@ -64,7 +137,7 @@ fun VisitaPromotoresCard(
             .fillMaxWidth()
             .size(80.dp),
         verticalArrangement = Arrangement.SpaceEvenly,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = CenterHorizontally
     )
     {
         Image(
@@ -128,7 +201,7 @@ fun VisitaPromotoresCard(
                     Column(
                         modifier = Modifier
                             .weight(0.15f)
-                            .align(Alignment.CenterVertically)
+                            .align(CenterVertically)
                     ) {
                         CardArrow(
                             onClick = onCardArrowClick,
@@ -139,10 +212,17 @@ fun VisitaPromotoresCard(
             }
             VisitaPromotoresExpand(
                 expanded = expanded,
-                viewModelNV = viewModelPromotorNuevaVisita,
+                viewModelNV = viewModelNV,
                 visita = visita,
-                context = context,
-                objetivoSemJuego = objetivoSemJuego
+                objetivoSemJuego = objetivoSemJuego,
+                mDatePickerDialog = mDatePickerDialog,
+                fecha = fecha,
+                horaEntrada = horaEntrada,
+                horasalida = horasalida,
+                mTimePickerDialogEntrada = mTimePickerDialogEntrada,
+                mTimePickerDialogSalida = mTimePickerDialogSalida,
+                expand = expand,
+                icon = icon
             )
         }
     }
@@ -154,82 +234,16 @@ fun VisitaPromotoresExpand(
     expanded: Boolean = true,
     viewModelNV: PromotorNuevaVisitaViewModel,
     visita: Visita,
-    context: Context,
     objetivoSemJuego: SnapshotStateList<Message>,
+    mDatePickerDialog: DatePickerDialog,
+    fecha: MutableState<String>,
+    horaEntrada: MutableState<String>,
+    horasalida: MutableState<String>,
+    mTimePickerDialogEntrada: TimePickerDialog,
+    mTimePickerDialogSalida: TimePickerDialog,
+    expand: MutableState<Int>,
+    icon: ImageVector,
 ) {
-    val expand = remember { mutableStateOf(0) }
-    val icon = if (expanded) Icons.Filled.KeyboardArrowUp
-    else Icons.Filled.KeyboardArrowDown
-    val fecha = viewModelNV.fecha
-    val horaEntrada = viewModelNV.hora_entrada
-    val horasalida = viewModelNV.hora_salida
-    //--------------------------DATE-TIMEPICKER-----------------------------//
-    val mYear: Int
-    val mMonth: Int
-    val mDay: Int
-    val mCalendar = Calendar.getInstance()
-    val mHour = mCalendar.get(Calendar.HOUR_OF_DAY)
-    val mMinute = mCalendar.get(Calendar.HOUR_OF_DAY)
-    mCalendar.time = Date()
-    mYear = mCalendar.get(Calendar.YEAR)
-    mMonth = mCalendar.get(Calendar.MONTH)
-    mDay = mCalendar.get(Calendar.DAY_OF_MONTH)
-    val mDatePickerDialog = DatePickerDialog(
-        context,
-        { _: DatePicker, mYear: Int, mMonth: Int, mDayOfMonth: Int ->
-            visita.fecha = Fecha(year = mYear, month = mMonth + 1, day = mDayOfMonth)
-            fecha.value = "${mDayOfMonth}-${mMonth}-${mYear}"
-        }, mYear, mMonth, mDay
-    )
-    val mTimePickerDialogEntrada = TimePickerDialog(
-        context,
-        { _, mHour: Int, mMinute: Int ->
-            if (mHour == 0) visita.horaEntrada = 24
-            else visita.horaEntrada = mHour
-            horaEntrada.value = visita.horaEntrada.toString()
-
-            if (horaEntrada.value.isNotBlank() && horasalida.value.isNotBlank()) {
-                if (horasalida.value.toInt() < horaEntrada.value.toInt()) {
-                    Toast.makeText(
-                        context,
-                        "La hora seleccionada es incorrecta",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    horaEntrada.value = ""
-                } else {
-                    viewModelNV.iniciofin(
-                        inicio = visita.horaEntrada!!.toInt(),
-                        fin = visita.horaSalida!!.toInt(),
-                    )
-                }
-            }
-
-        }, mHour, mMinute, true
-    )
-    val mTimePickerDialogSalida = TimePickerDialog(
-        context,
-        { _, mHour: Int, mMinute: Int ->
-            if (mHour == 0) visita.horaSalida = 24
-            else visita.horaSalida = mHour
-            horasalida.value = visita.horaSalida.toString()
-            if (horaEntrada.value.isNotBlank() && horasalida.value.isNotBlank()) {
-                if (horasalida.value.toInt() < horaEntrada.value.toInt()) {
-                    Toast.makeText(
-                        context,
-                        "La hora seleccionada es incorrecta",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    horasalida.value = ""
-                } else {
-                    viewModelNV.iniciofin(
-                        inicio = visita.horaEntrada!!.toInt(),
-                        fin = visita.horaSalida!!.toInt(),
-                    )
-                }
-            }
-        }, mHour, mMinute, true
-    )
-    //---------------------------------------------------------------------//
     AnimatedVisibility(
         visible = expanded,
         enter = enterExpand + enterFadeIn,
@@ -250,6 +264,7 @@ fun VisitaPromotoresExpand(
                         .fillMaxSize()
                         .padding(horizontal = 10.dp, vertical = 5.dp)
                 ) {
+                    //------------------------------SELECCION FECHA VISITA-------------------------------//
                     OutlinedTextField(
                         enabled = false,
                         value = fecha.value,
@@ -283,6 +298,7 @@ fun VisitaPromotoresExpand(
                         ),
                     )
                     Row {
+                        //-----------------------------HORA ENTRADA VISITA-------------------------------//
                         OutlinedTextField(
                             enabled = false,
                             value = horaEntrada.value,
@@ -314,6 +330,7 @@ fun VisitaPromotoresExpand(
                                 }
                             }
                         )
+                        //------------------------------HORA SALIDA VISITA-------------------------------//
                         OutlinedTextField(
                             enabled = false,
                             value = horasalida.value,
@@ -346,6 +363,7 @@ fun VisitaPromotoresExpand(
                             }
                         )
                     }
+                    //------------------------------SELECCION LIBRERIA BINGO VISITA-------------------------------//
                     if (viewModelNV.tipo.value == false) {
                         OutlinedTextField(
                             enabled = false,
@@ -366,7 +384,7 @@ fun VisitaPromotoresExpand(
                             )
                         )
                     }
-
+                    //------------------------------OBJETIVO SEMANAL VISITA-------------------------------//
                     OutlinedTextField(
                         enabled = false,
                         value = viewModelNV.getObjetSelect(),//objetivoSemanaal.value,
@@ -385,6 +403,7 @@ fun VisitaPromotoresExpand(
                             textColor = Color.White
                         )
                     )
+                    //------------------------------SELECCION ELABORACION LAYOUT VISITA-------------------------------//
                     OutlinedTextField(
                         enabled = false,
                         value = "Elaboracion de layout",
@@ -401,7 +420,6 @@ fun VisitaPromotoresExpand(
                                 }
                                 viewModelNV.a()
                             },
-                        //label = { Text("Objetivo Semanal") },
                         trailingIcon = {
                             Checkbox(
                                 checked = visita.elabLayout == 1,
@@ -416,12 +434,13 @@ fun VisitaPromotoresExpand(
                             textColor = Color.White
                         )
                     )
-
+                    //------------------------------ALERT OBJETIVO SEMANAL-------------------------------//
                     AlertObjetivoSemanalMenu(
                         viewModel = viewModelNV,
                         openclose = expand,
                         objetivoSemJuego = objetivoSemJuego
                     )
+                    //-------------------------------------------------------------------------------//
                 }
             }
         }
@@ -460,6 +479,7 @@ fun AlertObjetivoSemanalMenu(
                                 .padding(horizontal = 10.dp)
                                 .clickable {
                                     openclose.value = 0
+                                    viewModel.a()
                                 }
                         )
                         Text(
@@ -483,8 +503,6 @@ fun AlertObjetivoSemanalMenu(
                                         onCheckedChange = {
                                             items.check = it
                                             checkbox.value = items.check
-                                            //viewModel.objetivos_seleccionados(items)
-                                            viewModel.a()
                                         }
                                     )
                                     Text(
@@ -534,6 +552,7 @@ fun AlertObjetivoSemanalMenu(
                                 .padding(horizontal = 10.dp)
                                 .clickable {
                                     openclose.value = 0
+                                    viewModel.a()
                                 }
                         )
                         Text(
@@ -588,3 +607,4 @@ fun AlertObjetivoSemanalMenu(
         )
     }
 }
+

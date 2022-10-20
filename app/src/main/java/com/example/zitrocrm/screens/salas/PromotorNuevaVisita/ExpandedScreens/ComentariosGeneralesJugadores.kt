@@ -266,7 +266,7 @@ fun ComentariosGeneralesJugadoresExpand(
                             )
                         }
                     }
-                    //-----------------------------SELECT JUEGO---------------------------------------------//
+                    //-----------------------------SELECT JUEGO----------------------------------//
                     OutlinedTextField(
                         enabled = false,
                         value = paqueteria_familia[0],
@@ -318,7 +318,7 @@ fun ComentariosGeneralesJugadoresExpand(
                             textColor = Color.White
                         )
                     )
-                    //------------------------ALERT SELECT PERFIL -----------------------------//
+                    //---------------------------ALERT SELECT PERFIL -----------------------------//
                     AlertJuegosPerfil(
                         alert = perfilexpanded,
                         perfil = perfil,
