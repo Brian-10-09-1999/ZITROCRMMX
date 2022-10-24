@@ -8,7 +8,8 @@ import com.google.gson.annotations.SerializedName
 data class GETDO (
 
     @SerializedName("ok"   ) var ok   : Boolean?        = null,
-    @SerializedName("rows" ) var rows : ArrayList<RowsDO> = arrayListOf()
+    @SerializedName("rows" ) var rows : ArrayList<RowsDO> = arrayListOf(),
+    @SerializedName("msg"   ) var msg   : String?        = null,
 
 )
 

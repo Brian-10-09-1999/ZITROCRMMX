@@ -10,7 +10,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Icon
@@ -18,9 +17,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
@@ -29,13 +26,13 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.zitrocrm.R
 import com.example.zitrocrm.network.models_dto.Filter.FilterViewModel
+import com.example.zitrocrm.repository.Models.models_nueva_visita.ArrayFoto
 import com.example.zitrocrm.screens.*
 import com.example.zitrocrm.screens.homepage.components.FilterScreen
 import com.example.zitrocrm.screens.login.LoginViewModel
@@ -125,7 +122,7 @@ fun NavigationScreen() {
             PromotorNewScreenn(
                 navController,
                 viewModelPromotorNuevaVisita,
-                filterViewModel
+                filterViewModel,
             )
         }
         composable(route = Destination.PromotorReportScreen.route) {

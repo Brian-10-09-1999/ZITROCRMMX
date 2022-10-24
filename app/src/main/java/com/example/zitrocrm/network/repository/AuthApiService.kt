@@ -4,24 +4,28 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.example.zitrocrm.network.models_dto.CompetenciaJuegosBingo.PrioridadesDTO
 import com.example.zitrocrm.network.models_dto.DetalleOcupacionDto.*
 import com.example.zitrocrm.network.models_dto.Filter.ClienteFilter.ClienteFilter
-import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.ObjSemanalFilter.ObjSemanalDto
 import com.example.zitrocrm.network.models_dto.Filter.RegionesFilter.RegionesFilter
 import com.example.zitrocrm.network.models_dto.Filter.SalasFilter.SalasFilter
 import com.example.zitrocrm.network.models_dto.Login.LoginDto
 import com.example.zitrocrm.network.models_dto.Login.LoginrespDto
 import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.Competencia.CompetenciaLibs
-import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.JuegosFilter.JuegosFilterDto
 import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.FoliosTecnicos.FoliosTecnicosDTO
 import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.GetVisita.GETDO
+import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.JuegosFilter.JuegosFilterDto
 import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.JuegosFilter.SubJuegos
+import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.ObjSemanalFilter.ObjSemanalDto
 import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.PostVisitaPromotor
 import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.ProveedorFilter.ProveedoresDto
 import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.ProveedorFilter.Rows
-import com.example.zitrocrm.repository.Models.models_nueva_visita.ArrayFoto
-import com.example.zitrocrm.repository.Models.models_nueva_visita.ArrayFoto2
 import com.example.zitrocrm.utils.Val_Constants
+import com.google.gson.annotations.SerializedName
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import okhttp3.ResponseBody
+import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.*
+
 
 interface AuthApiService {
 
@@ -81,12 +85,17 @@ interface AuthApiService {
         @Body PromotorNuevaVisita: PromotorNuevaVisita)
     : Response<PostVisitaPromotor>
 
-    //
-    @POST(Val_Constants.API_SALAS_VISITAS_PROMOTORES_VISITA)
-    suspend fun postfoto(
+    data class fsdf (
+        @SerializedName("ok"   ) var ok   : Boolean?        = null,
+        @SerializedName("msg"   ) var msg   : String?        = null,
+            )
+    @Multipart
+    @POST(Val_Constants.API_DOC_FOTOGRAFICA)
+    suspend fun postDocFoto(
         @Header("x-token") token:String,
-        @Body ArrayFoto: ArrayList<ArrayFoto2>
-    ): Response<PostVisitaPromotor>
+//        @Part files: List<MultipartBody.Part>,
+        @Part files: ArrayList<MultipartBody.Part>
+    ):Response<fsdf>
 
     @GET(Val_Constants.API_SALAS_COMPETENCIA_LIBRERIAS)
     suspend fun getSalasLibrerias(

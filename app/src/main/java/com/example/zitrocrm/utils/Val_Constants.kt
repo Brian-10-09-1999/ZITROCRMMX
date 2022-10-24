@@ -24,6 +24,7 @@ object Val_Constants {
     const val API_FAMILIA_BINGO_JUEGOS = "api/catalogos/familiaBingo"
     const val API_ORDENES_CAMBIO = "api/maquinas/ordenesCambio/prioridades"
     const val API_ULTIMO_DO = "api/salas/visitas/promotores/ultimosRegistros"
+    const val API_DOC_FOTOGRAFICA = "api/salas/visitas/promotores/archivos"
     /**MUTABLE STATE LIST SALAS NEW REGISTRO**/
     const val ExpandAnimation = 300
     const val CollapseAnimation = 300

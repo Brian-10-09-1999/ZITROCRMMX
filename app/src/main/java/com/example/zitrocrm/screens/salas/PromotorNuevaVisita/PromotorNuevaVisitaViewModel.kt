@@ -1,10 +1,10 @@
 package com.example.zitrocrm.screens.salas.PromotorNuevaVisita
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.util.Base64
+import android.net.Uri
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.core.net.toFile
@@ -20,15 +20,22 @@ import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.ObjSemanalFilte
 import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.ProveedorFilter.Rows
 import com.example.zitrocrm.network.repository.RetrofitHelper
 import com.example.zitrocrm.repository.Models.models_nueva_visita.ArrayFoto
-import com.example.zitrocrm.repository.Models.models_nueva_visita.ArrayFoto2
 import com.example.zitrocrm.repository.SharedPrefence
 import com.example.zitrocrm.screens.login.components.alertdialog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
 import javax.inject.Inject
+import kotlin.collections.ArrayList
+
 val alertDetalleSave = mutableStateOf(false)
+
 @HiltViewModel
 class PromotorNuevaVisitaViewModel @Inject constructor(
 ) : ViewModel() {
@@ -83,6 +90,7 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
             }
         }
     }
+
     fun addDetalleOcupacion(
         proveedor_info: SnapshotStateList<String>,
         paqueteria_familia: SnapshotStateList<String>,
@@ -104,19 +112,9 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                 horarios = ArrayList<Horarios>(/*listHorarioss*/),
             )
         )
-        if (proveedor_info[1].toInt() == 24 || proveedor_info[1].toInt() == 97){
-            if(visitaPromotor.value!!.visita!!.tipo==1){
-                if(proveedor_info[0]=="ZITRO BINGO")
-                    else proveedores_selections.add(
-                    Rows(
-                        nombre = proveedor_info[0],
-                        id = proveedor_info[1].toInt(),
-                        tipo = proveedor_info[2].toInt()
-                    )
-                )
-            }
-            if(visitaPromotor.value!!.visita!!.tipo==2){
-                if(proveedor_info[0]=="ZITRO SLOTS")
+        if (proveedor_info[1].toInt() == 24 || proveedor_info[1].toInt() == 97) {
+            if (visitaPromotor.value!!.visita!!.tipo == 1) {
+                if (proveedor_info[0] == "ZITRO BINGO")
                 else proveedores_selections.add(
                     Rows(
                         nombre = proveedor_info[0],
@@ -125,8 +123,17 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                     )
                 )
             }
-        }
-        else{
+            if (visitaPromotor.value!!.visita!!.tipo == 2) {
+                if (proveedor_info[0] == "ZITRO SLOTS")
+                else proveedores_selections.add(
+                    Rows(
+                        nombre = proveedor_info[0],
+                        id = proveedor_info[1].toInt(),
+                        tipo = proveedor_info[2].toInt()
+                    )
+                )
+            }
+        } else {
             proveedores_selections.add(
                 Rows(
                     nombre = proveedor_info[0],
@@ -375,6 +382,51 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
     fun RemoveObservacionesComp(item: ObservacionesCompetencia) {
         visitaPromotor.value!!.observacionesCompetencia.remove(item);a()
     }
+
+    //---------------------------------------DOCMENTACION FOTOGRAFICA----------------------------------------------//
+
+    val array_doc_foto = mutableStateListOf<ArrayFoto?>()
+
+    fun postfoto(arrayfotos: SnapshotStateList<ArrayFoto?>,context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val authService = RetrofitHelper.getAuthService()
+            try {
+                val imagesParts = ArrayList<MultipartBody.Part>(arrayfotos.size)
+                arrayfotos.forEach {
+                    val file = File("Teléfono/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Imagenes/IMG-20221024-WA0003.jpg")
+                    Log.d("file","file=="+file)
+                    val requestBody = RequestBody.create("image/jpeg".toMediaTypeOrNull(), file)//file.asRequestBody(contentType = "imagen/jpg".toMediaTypeOrNull())
+                    imagesParts.add(
+                        MultipartBody.Part.createFormData("files",file.name, requestBody)
+                    )
+                }
+                val responseService =
+                    authService.postDocFoto(
+                        token = "sdfqdfasdfaaaaaaaaaaaaaaaaaa",
+                        files = imagesParts
+                    )
+
+                if (responseService.isSuccessful) {
+
+                }
+                imagesParts.forEach {
+                    Log.d("imagesParts", "imagesParts" + it.body)
+                    Log.d("imagesParts", "imagesParts" + it)
+                    Log.d("imagesParts", "imagesParts" + it.headers)
+                    Log.d("imagesParts", "imagesParts" + it.body)
+                    it.let { psrt ->
+                        Log.d("imagesParts", "imagesParts" + psrt.body.contentType())
+                        Log.d("imagesParts", "imagesParts" + psrt.body.contentLength())
+
+                    }
+                }
+            } catch (e: Exception) {
+                Log.d("OOOODD", "DFGSDFGSDFGSDFGSDFGSDFGSDFG", e)
+            }
+        }
+    }
+
+
     val juegosFilter = mutableStateListOf<Juegos>()
     val foliostecnicossalas: MutableList<rows> = arrayListOf()
     val proveedores_selections = mutableStateListOf<Rows>()
@@ -421,9 +473,11 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             val authService = RetrofitHelper.getAuthService()
             try {
-                objetivoSemanal.filter { it.check == true }.forEach { visitaPromotor.value!!.objetivos.add(it.id!!.toInt()) }
+                objetivoSemanal.filter { it.check == true }
+                    .forEach { visitaPromotor.value!!.objetivos.add(it.id!!.toInt()) }
                 visitaPromotor.value!!.visita!!.salaid = salaid.toInt()
-                juegosObjetivo.filter { it.check == true }.forEach { visitaPromotor.value!!.librerias.add(it.id!!.toInt()) }
+                juegosObjetivo.filter { it.check == true }
+                    .forEach { visitaPromotor.value!!.librerias.add(it.id!!.toInt()) }
                 visitaPromotor.value!!.send = b
                 listdetalleOcu.forEachIndexed { index, it ->
                     if (it.tipo == 1) {
@@ -468,7 +522,7 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                 val responseService = authService.postSalaVisitaPromotores(
                     token = token, visitaPromotor.value!!
                 )
-                if (responseService.isSuccessful&&responseService.body()!!.message!!.id!!>0) {
+                if (responseService.isSuccessful && responseService.body()!!.message!!.id!! > 0) {
                     networkstate_ID.value = responseService.body()!!.message!!.id!!.toInt()
                     networkstate.value = responseService.body()!!.msg.toString()
                     alertDetalleSave.value = true
@@ -489,47 +543,12 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                 alertdialog(0, "")
                 Log.d("Exception", "POST VISITA PROMOTORES", e)
             }
-           /* if (networkstate_ID.value > 0) {
-                cleanReport()
-            }*/
+            /* if (networkstate_ID.value > 0) {
+                 cleanReport()
+             }*/
         }
     }
 
-    fun postfoto(arrayfotos: SnapshotStateList<ArrayFoto?>) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val authService = RetrofitHelper.getAuthService()
-            try {
-                val arra2 = mutableStateListOf<ArrayFoto2>()
-                arrayfotos.forEach {
-                    arra2.add(
-                        ArrayFoto2(
-                            it!!.Uri!!.toFile(),
-                            it.TipoFoto
-                        )
-                    )
-                }
-                val responseService =
-                    authService.postfoto(
-                        token = "sfdvsdfsdfsdf",
-                        ArrayList<ArrayFoto2>(arra2)
-                    )
-                if(responseService.isSuccessful){
-
-                }
-            }catch (e:Exception){
-                Log.d("OOOODD","DFGSDFGSDFGSDFGSDFGSDFGSDFG")
-            }
-
-        }
-    }
-    ///////DECODE
-    fun decodePicString (encodedString: String): Bitmap {
-
-        val imageBytes = Base64.decode(encodedString, Base64.DEFAULT)
-        val decodedImage = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-
-        return decodedImage
-    }
 
     var a = mutableStateOf(true)
     fun getUltimoDO(token: String) {
@@ -688,7 +707,7 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         }
     }
 
-    //-----------------------------------------------------------FUN API GET FILTROS DE NUEVA VISITA--------------------------------------------------------//
+//-----------------------------------------------------------FUN API GET FILTROS DE NUEVA VISITA--------------------------------------------------------//
 
     fun check_bingo(items: Message) {
         if (items.check!! && objetivoSemanalFilter.filter { it.juegoidfk == items.id }
@@ -705,9 +724,9 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         }
     }
 
-    fun getNuevaVisitaFilters(token: String, tipo: Int, clear:Boolean) {
+    fun getNuevaVisitaFilters(token: String, tipo: Int, clear: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            if(clear){
+            if (clear) {
                 objetivoSemanalSelec.clear()
                 objetivoSemanalFilter.clear()
                 juegosObjetivo.clear()
