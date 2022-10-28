@@ -2,6 +2,9 @@ package com.example.zitrocrm.screens.salas
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Build
+import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -47,6 +50,7 @@ import com.example.zitrocrm.utils.Val_Constants.ExpandAnimation
 import com.example.zitrocrm.utils.Val_Constants.FadeInAnimation
 import com.example.zitrocrm.utils.Val_Constants.FadeOutAnimation
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun PromotorNewScreenn(
     navController: NavController,
@@ -58,7 +62,7 @@ fun PromotorNewScreenn(
     val cliente = "" + datastore.getCliente().toString()
     val region = "" + datastore.getRegion().toString()
     val sala = "" + datastore.getSala().toString()
-    val salaid = "" + datastore.getSalaId().toString()
+    val salaid = datastore.getSalaId().toString()
     val token = datastore.getToken().toString()
     val visita = viewModelNV.visitaPromotor.value!!.visita!!
     val acumulados = viewModelNV.visitaPromotor.value!!.acumulados
@@ -118,7 +122,6 @@ fun PromotorNewScreenn(
         if (act) {
             ContentNuevaVisita(
                 viewModelNV = viewModelNV,
-                navController = navController,
                 context = context,
                 tipo = tipo,
                 cards = viewModelNV.cards,
@@ -195,9 +198,10 @@ fun TopAppBarNuevaVisita(
                         color = colorbingo
                     )
                     Switch(
-                        checked = visita.tipo == 1,
+                        checked = viewModelNV.tipo.value,
                         onCheckedChange = {
-                            if (it) visita.tipo = 1 else visita.tipo = 2
+                            viewModelNV.tipo.value = it
+                            if (viewModelNV.tipo.value) visita.tipo = 1 else visita.tipo = 2
                             viewModelNV.getNuevaVisitaFilters(
                                 token = token,
                                 tipo = visita.tipo!!.toInt(),
@@ -228,11 +232,11 @@ fun TopAppBarNuevaVisita(
     )
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun ContentNuevaVisita(
     viewModelNV: PromotorNuevaVisitaViewModel,
-    navController: NavController,
     context: Context,
     tipo: MutableState<Boolean>,
     cards: MutableList<Boolean>,
@@ -289,7 +293,7 @@ fun ContentNuevaVisita(
 
             item {
                 DetalleOcupacionCard(
-                    card2 = "Detalle Ocupación Bingo",
+                    card2 = "Detalle Ocupación",
                     onCardArrowClick = {
                         viewModelNV.cardsexp(1)
                     },
@@ -332,7 +336,7 @@ fun ContentNuevaVisita(
                     }
                     //-----ARRAY ACUMULADOS-----//
                     itemsIndexed(acumulados) { index, item ->
-                        dataItemAcumulado(
+                        DataItemAcumulado(
                             item = item,
                             index = index,
                             viewModelNV = viewModelNV
@@ -451,14 +455,13 @@ fun ContentNuevaVisita(
                     card10 = "Documentacion fotografica",
                     onCardArrowClick = { viewModelNV.cardsexp(9) },
                     expanded = cards[9],
-                    viewModelNV = viewModelNV,
                     context = context,
-                    arrayfotos = arrayfotos
+                    arrayfotos = arrayfotos,
+                    viewModelNV = viewModelNV
                 )
             }
 
-
-//----------------------------------BTN ENVIAR && BTN GUARDAR---------------------------------------
+//----------------------------------VALIDATION BUTTON---------------------------------------
 
             item {
                 val isValidate by derivedStateOf {
@@ -480,6 +483,7 @@ fun ContentNuevaVisita(
                             && viewModelNV.hora_salida.value.isNotBlank()
                             && viewModelNV.juegosObjetivo.filter { it.check == true }.isNotEmpty()
                             && viewModelNV.objetivoSemanal.filter { it.check == true }.isNotEmpty()
+
                 }
                 val isRotated = rememberSaveable { mutableStateOf(false) }
                 val rotationAngle by animateFloatAsState(
@@ -496,12 +500,17 @@ fun ContentNuevaVisita(
                     Button(
                         enabled = isValidate,
                         onClick = {
-                            viewModelNV.postVisitaPromotoresSala(
-                                token = token,
-                                salaid = salaid,
-                                b = false
-                            )
-                            isRotated.value = !isRotated.value
+                            if(salaid.toInt()>0){
+                                viewModelNV.postVisitaPromotoresSala(
+                                    token = token,
+                                    salaid = salaid,
+                                    b = true,
+                                    context = context
+                                )
+                                isRotated.value = !isRotated.value
+                            }else{
+                                Toast.makeText(context, "Selecciona tu proveedor", Toast.LENGTH_SHORT).show()
+                            }
                         },
                         modifier = Modifier
                             .padding(horizontal = 5.dp)
@@ -533,7 +542,8 @@ fun ContentNuevaVisita(
                             viewModelNV.postVisitaPromotoresSala(
                                 token = token,
                                 salaid = salaid,
-                                b = true
+                                b = false,
+                                context = context
                             )
                             isRotated.value = !isRotated.value
                         },

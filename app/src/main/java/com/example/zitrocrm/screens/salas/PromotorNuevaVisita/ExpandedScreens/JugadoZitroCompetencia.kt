@@ -111,7 +111,9 @@ fun JugadoZitroCompetencia(
                         Image(
                             painter = painterResource(id = R.drawable.nav_maquinas_icon),
                             contentDescription = "IconList",
-                            modifier = Modifier.padding(start = 10.dp, top = 2.dp, bottom = 2.dp)
+                            modifier = Modifier
+                                .size(40.dp)
+                                .padding(start = 10.dp)//.padding(start = 10.dp, top = 2.dp, bottom = 2.dp)
                         )
                     }
                     Column(
@@ -244,7 +246,7 @@ fun JugadoZitroCompetenciaExpand(
                         },
                         competencia = false
                     )
-                    //--------------------ALERT PAQUETERIA---------------------//
+//----------------------------------------ALERT SELECCIONA JUEGO--------------------------------------//
                     AlertPaqueteria(
                         viewModel = viewModel,
                         alert = alert,
@@ -252,7 +254,7 @@ fun JugadoZitroCompetenciaExpand(
                         tipo = tipo,
                         paqueteria_familia = producto_paqueteria
                     )
-                    //-------------------------CONTENT--------------------------//
+//----------------------------------------SELECCIONA PROVEEDOR----------------------------------------//
                     OutlinedTextField(
                         enabled = false,
                         value = proveedor_info[0],
@@ -274,39 +276,34 @@ fun JugadoZitroCompetenciaExpand(
                             textColor = Color.White
                         )
                     )
-                    OutlinedTextField(
-                        enabled = false,
-                        value = producto_paqueteria[0],
-                        onValueChange = {},
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            keyboardType = KeyboardType.Ascii,
-                            imeAction = ImeAction.Next
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
+//----------------------------------------SELECCIONA JUEGO-----------------------------------------//
+                    if(viewModel.list_familia_paqueteria.isNotEmpty()){
+                        OutlinedTextField(
+                            enabled = false,
+                            value = producto_paqueteria[0],
+                            onValueChange = {},
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    alert.value = true
+                                },
+                            label = { Text("Juego") },
+                            colors = TextFieldDefaults.textFieldColors(
+                                textColor = Color.White
+                            ),
+                            trailingIcon = {
                                 if (viewModel.list_familia_paqueteria.isNotEmpty()) {
-                                    alert.value = true
-                                }
-                            },
-                        label = { Text("Producto") },
-                        colors = TextFieldDefaults.textFieldColors(
-                            textColor = Color.White
-                        ),
-                        trailingIcon = {
-                            if (viewModel.list_familia_paqueteria.isNotEmpty()) {
-                                IconButton(onClick = {
-                                    alert.value = true
-                                }) {
-                                    Icon(icon2, contentDescription = null)
+                                    IconButton(onClick = {
+                                        alert.value = true
+                                    }) {
+                                        Icon(icon2, contentDescription = null)
+                                    }
                                 }
                             }
-                        }
-                    )
+                        )
+                    }
                     Spacer(Modifier.height(10.dp))
+                    //--------------------------------------SELECCIONA ZONA--------------------------------------//
                     Text(
                         text = "Zona",
                         fontStyle = FontStyle.Normal,
@@ -362,7 +359,7 @@ fun JugadoZitroCompetenciaExpand(
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = CenterVertically
                         ) {
-                            Icon(Icons.Filled.SmokeFree, "Diferencia")
+                            Icon(Icons.Filled.SmokeFree, "")
                             Spacer(Modifier.width(10.dp))
                             Text(
                                 text = "NO FUMAR",
@@ -388,6 +385,7 @@ fun JugadoZitroCompetenciaExpand(
                             )
                         }
                     }
+//----------------------------------------SELECCIONA TIRO MINIMO----------------------------------------//
                     Row(modifier = Modifier.fillMaxWidth()) {
                         OutlinedTextField(
                             value = tiro_minimo.value,
@@ -415,6 +413,7 @@ fun JugadoZitroCompetenciaExpand(
                             )
                         )
                         Spacer(Modifier.width(5.dp))
+//----------------------------------------SELECCIONA TIRO MAXIMO----------------------------------------//
                         OutlinedTextField(
                             value = tiro_maximo.value,
                             onValueChange = {
@@ -441,6 +440,7 @@ fun JugadoZitroCompetenciaExpand(
                             )
                         )
                     }
+//----------------------------------------SELECCIONA TIRO PROMEDIO----------------------------------------//
                     OutlinedTextField(
                         value = tiro_promedio.value,
                         onValueChange = {
@@ -466,6 +466,7 @@ fun JugadoZitroCompetenciaExpand(
                             textColor = Color.White
                         )
                     )
+//----------------------------------------SELECCIONA APUESTA PROMEDIO----------------------------------------//
                     OutlinedTextField(
                         value = apuestas_promedio.value,
                         onValueChange = { apuestas_promedio.value = it },
@@ -488,6 +489,7 @@ fun JugadoZitroCompetenciaExpand(
                             textColor = Color.White
                         )
                     )
+//----------------------------------------PROMEDIO OCUPACION----------------------------------------//
                     Row(modifier = Modifier.fillMaxWidth()) {
                         OutlinedTextField(
                             value = promedio_ocupacion.value,
@@ -515,6 +517,7 @@ fun JugadoZitroCompetenciaExpand(
                             )
                         )
                         Spacer(Modifier.width(5.dp))
+//----------------------------------------SELECCIONA FORMATO DE HORA O MIN----------------------------------------//
                         OutlinedTextField(
                             enabled = false,
                             value = unidadOcupacion.value,
@@ -543,6 +546,7 @@ fun JugadoZitroCompetenciaExpand(
                             )
                         )
                     }
+//----------------------------------------SELECCIONA HORA O MINUTO----------------------------------------//
                     DropdownMenu(
                         expanded = formatexpanded.value,
                         onDismissRequest = { formatexpanded.value = false },
@@ -560,6 +564,7 @@ fun JugadoZitroCompetenciaExpand(
                         }
                     }
                     Spacer(Modifier.height(10.dp))
+//----------------------------------------SELECCIONA PROGRESIVOS----------------------------------------//
                     Text(
                         text = "Progresivos (SAP, LAP)",
                         fontStyle = FontStyle.Normal,
@@ -647,6 +652,7 @@ fun JugadoZitroCompetenciaExpand(
                             )
                         }
                     }
+//----------------------------------------VALIDACION BOTTON----------------------------------------//
                     Spacer(Modifier.height(10.dp))
                     val isRotated = rememberSaveable { mutableStateOf(false) }
                     val rotationAngle by animateFloatAsState(
@@ -665,6 +671,7 @@ fun JugadoZitroCompetenciaExpand(
                                 && promedio_ocupacion.value.isNotBlank()
                                 && progresivos.isNotEmpty()
                     }
+//----------------------------------------BTN AGREGAR----------------------------------------//
                     Button(
                         enabled = isValidate,
                         onClick = {
@@ -702,7 +709,7 @@ fun JugadoZitroCompetenciaExpand(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.CheckCircle,
-                            contentDescription = "Precio Inicio",
+                            contentDescription = "",
                             tint = Color.White
                         )
                     }
@@ -719,9 +726,12 @@ fun DataItemMasjugado(
     item: MasJugado,
     viewModelNV: PromotorNuevaVisitaViewModel
 ) {
-    var expandcards by remember {
-        mutableStateOf(false)
-    }
+    var expandcards by remember { mutableStateOf(false) }
+    val tiro_min = remember { mutableStateOf(item.tiroMinimo.toString()) }
+    val tiro_max = remember { mutableStateOf(item.tiroMaximo.toString()) }
+    val tiro_prom = remember { mutableStateOf(item.tiroPromedio.toString()) }
+    val apuesta_prom = remember { mutableStateOf(item.apuestasPromedio.toString()) }
+
     Card(modifier = Modifier
         .fillMaxWidth()
         .padding(vertical = 5.dp, horizontal = 15.dp)
@@ -743,7 +753,7 @@ fun DataItemMasjugado(
                 Column {
                     Row {
                         Icon(
-                            Icons.Filled.SnippetFolder, "Diferencia", modifier = Modifier.align(
+                            Icons.Filled.SnippetFolder, "", modifier = Modifier.align(
                                 CenterVertically
                             )
                         )
@@ -752,6 +762,115 @@ fun DataItemMasjugado(
                             fontSize = 15.sp,
                             textAlign = TextAlign.Start,
                             modifier = Modifier.padding(vertical = 10.dp, horizontal = 10.dp)
+                        )
+                    }
+                    Row {
+                        OutlinedTextField(
+                            value = tiro_min.value,
+                            onValueChange = {
+                                if (viewModelNV.getValidationSum(it)) {
+                                    item.tiroMinimo = it.toInt()
+                                    tiro_min.value = item.tiroMinimo.toString()
+                                } else {
+                                    tiro_min.value = ""
+                                    item.tiroMinimo = 0
+                                }
+                            },
+                            label = { Text("Tiro Mínimo") },
+                            modifier = Modifier
+                                .padding(vertical = 2.5.dp)
+                                .fillMaxWidth(.5f),
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                keyboardType = KeyboardType.Text,
+                            ),
+                            colors = TextFieldDefaults.textFieldColors(
+                                textColor = Color.White
+                            ),
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Filled.MonetizationOn,
+                                    contentDescription = null
+                                )
+                            },
+                            singleLine = true
+                        )
+                        OutlinedTextField(
+                            value = tiro_max.value,
+                            onValueChange = {
+                                if (viewModelNV.getValidationSum(it)) {
+                                    item.tiroMaximo = it.toInt()
+                                    tiro_max.value = item.tiroMaximo.toString()
+                                } else {
+                                    tiro_max.value = ""
+                                    item.tiroMaximo = 0
+                                }
+                            },
+                            label = { Text("Tiro Máximo") },
+                            modifier = Modifier
+                                .padding(vertical = 2.5.dp)
+                                .fillMaxWidth(),
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                keyboardType = KeyboardType.Text,
+                            ),
+                            colors = TextFieldDefaults.textFieldColors(
+                                textColor = Color.White
+                            ),
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Filled.MonetizationOn,
+                                    contentDescription = null
+                                )
+                            },
+                            singleLine = true
+                        )
+                    }
+                    Row {
+                        OutlinedTextField(
+                            value = tiro_prom.value,
+                            onValueChange = {
+                                if (viewModelNV.getValidationSum(it)) {
+                                    item.tiroPromedio = it.toInt()
+                                    tiro_prom.value = item.tiroPromedio.toString()
+                                } else {
+                                    tiro_prom.value = ""
+                                    item.tiroPromedio = 0
+                                }
+                            },
+                            label = { Text("Tiro Promedio") },
+                            modifier = Modifier
+                                .padding(vertical = 2.5.dp)
+                                .fillMaxWidth(.5f),
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                keyboardType = KeyboardType.Text,
+                            ),
+                            colors = TextFieldDefaults.textFieldColors(
+                                textColor = Color.White
+                            ),
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Filled.MonetizationOn,
+                                    contentDescription = null
+                                )
+                            },
+                            singleLine = true
+                        )
+                        OutlinedTextField(
+                            value = apuesta_prom.value,
+                            onValueChange = {
+                                item.apuestasPromedio = it
+                                apuesta_prom.value = item.apuestasPromedio.toString()
+                            },
+                            label = { Text("Apuesta Promedio") },
+                            modifier = Modifier
+                                .padding(vertical = 2.5.dp)
+                                .fillMaxWidth(),
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                keyboardType = KeyboardType.Text,
+                            ),
+                            colors = TextFieldDefaults.textFieldColors(
+                                textColor = Color.White
+                            ),
+                            singleLine = true
                         )
                     }
                     Column(
@@ -764,47 +883,50 @@ fun DataItemMasjugado(
                     ) {
                         if (expandcards) {
                             Text(
-                                text = "Tiro Minimo $: ${item.tiroMinimo} \nTiro Maximo $: ${item.tiroMaximo} \nTiro Promedio \$: ${item.tiroPromedio}\n Apuesta Prom $: ${item.apuestasPromedio} ",
+                                text = "Promedio Ocupacion: ${item.promedioOcupacion} min",
                                 fontSize = 15.sp,
                                 textAlign = TextAlign.Start,
                                 modifier = Modifier.padding(
-                                    start = 5.dp,
-                                    end = 5.dp,
-                                    bottom = 15.dp
+                                    horizontal = 5.dp
                                 )
                             )
-                            if (item.zona.isNotEmpty()) {
-                                item.zona.forEach {
-                                    Text(
-                                        text = "Zona: ${it.zona}",
-                                        fontSize = 15.sp,
-                                        textAlign = TextAlign.Start,
-                                        modifier = Modifier.padding(
-                                            horizontal = 5.dp
-                                        )
-                                    )
+                            Row {
+                                if (item.zona.isNotEmpty()) {
+                                    Column() {
+                                        item.zona.forEach {
+                                            Text(
+                                                text = "Zona: ${it.zona}",
+                                                fontSize = 15.sp,
+                                                textAlign = TextAlign.Start,
+                                                modifier = Modifier.padding(
+                                                    horizontal = 5.dp
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
+                                if (item.progresivos.isNotEmpty()) {
+                                    Column() {
+                                        item.progresivos.forEach {
+                                            Text(
+                                                text = "Progresivos: ${it.progresivos}",
+                                                fontSize = 15.sp,
+                                                textAlign = TextAlign.Start,
+                                                modifier = Modifier.padding(
+                                                    horizontal = 5.dp
+                                                )
+                                            )
+                                        }
+                                    }
                                 }
                             }
-                            if (item.progresivos.isNotEmpty()) {
-                                item.progresivos.forEach {
-                                    Text(
-                                        text = "Progresivos: ${it.progresivos}",
-                                        fontSize = 15.sp,
-                                        textAlign = TextAlign.Start,
-                                        modifier = Modifier.padding(
-                                            horizontal = 5.dp
-                                        )
-                                    )
-                                }
-                            }
-
                         }
                     }
                 }
             }
             IconButton(onClick = {
                 viewModelNV.removeMasJugados(item)
-            }) {
+            }, modifier = Modifier.size(20.dp)) {
                 Icon(
                     imageVector = Icons.Filled.Delete,
                     contentDescription = "delete"
@@ -827,9 +949,6 @@ fun AlertPaqueteria(
             onDismissRequest = {},
             title = null,
             buttons = {
-                val title =
-                    if (tipo.value && proveedor_info[1].toInt() == 24 || tipo.value == false && proveedor_info[1].toInt() == 24) "SELECCIONA UN SUBJUEGO"
-                    else "SELECCIONA UN JUEGO"
                 Box(
                     modifier = Modifier
                         .height(60.dp)
@@ -850,7 +969,7 @@ fun AlertPaqueteria(
                                 }
                         )
                         Text(
-                            text = title,
+                            text = "SELECCIONA EL JUEGO",
                             modifier = Modifier.align(CenterVertically)
                         )
                     }

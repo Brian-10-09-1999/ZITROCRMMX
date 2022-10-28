@@ -75,14 +75,14 @@ fun VisitaPromotoresCard(
     mMonth = mCalendar.get(Calendar.MONTH)
     mDay = mCalendar.get(Calendar.DAY_OF_MONTH)
     val mDatePickerDialog = DatePickerDialog(
-        context,
+        context,R.style.DatePickerTheme,
         { _: DatePicker, mYear: Int, mMonth: Int, mDayOfMonth: Int ->
             visita.fecha = Fecha(year = mYear, month = mMonth + 1, day = mDayOfMonth)
             fecha.value = "${mDayOfMonth}-${mMonth}-${mYear}"
         }, mYear, mMonth, mDay
     )
     val mTimePickerDialogEntrada = TimePickerDialog(
-        context,
+        context,R.style.DatePickerTheme,
         { _, mHour: Int, mMinute: Int ->
             if (mHour == 0) visita.horaEntrada = 24
             else visita.horaEntrada = mHour
@@ -106,7 +106,7 @@ fun VisitaPromotoresCard(
         }, mHour, mMinute, true
     )
     val mTimePickerDialogSalida = TimePickerDialog(
-        context,
+        context,R.style.DatePickerTheme,
         { _, mHour: Int, mMinute: Int ->
             if (mHour == 0) visita.horaSalida = 24
             else visita.horaSalida = mHour
@@ -173,7 +173,7 @@ fun VisitaPromotoresCard(
                     Column(
                         modifier = Modifier
                             .weight(0.15f)
-                            .align(Alignment.CenterVertically)
+                            .align(CenterVertically)
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.reporte_visitas_icon),
@@ -270,9 +270,13 @@ fun VisitaPromotoresExpand(
                         value = fecha.value,
                         onValueChange = {},
                         modifier = Modifier
-                            .padding(vertical = 2.5.dp)
+                            .padding(vertical = 1.dp)
                             .fillMaxWidth()
                             .clickable {
+                                val c = Calendar.getInstance()
+                                c.add(Calendar.MONTH,0)
+                                mDatePickerDialog.datePicker.minDate = c.timeInMillis-172800000
+                                mDatePickerDialog.datePicker.maxDate = c.timeInMillis
                                 mDatePickerDialog.show()
                             },
                         label = {
@@ -304,7 +308,7 @@ fun VisitaPromotoresExpand(
                             value = horaEntrada.value,
                             onValueChange = {},
                             modifier = Modifier
-                                .padding(vertical = 2.5.dp, horizontal = 1.dp)
+                                .padding(1.dp)
                                 .fillMaxWidth(.49f)
                                 .clickable {
                                     mTimePickerDialogEntrada.show()
@@ -313,7 +317,7 @@ fun VisitaPromotoresExpand(
                             leadingIcon = {
                                 Icon(
                                     Icons.Filled.Timer,
-                                    "contentDescription",
+                                    null,
                                     tint = Color.White
                                 )
                             },
@@ -336,7 +340,7 @@ fun VisitaPromotoresExpand(
                             value = horasalida.value,
                             onValueChange = {},
                             modifier = Modifier
-                                .padding(vertical = 2.5.dp, horizontal = 1.dp)
+                                .padding(1.dp)
                                 .fillMaxWidth()
                                 .clickable {
                                     mTimePickerDialogSalida.show()
@@ -367,11 +371,11 @@ fun VisitaPromotoresExpand(
                     if (viewModelNV.tipo.value == false) {
                         OutlinedTextField(
                             enabled = false,
-                            value = viewModelNV.getObjetivoString(),//objetivoSemanaal.value,
+                            value = viewModelNV.getObjetivoString(),
                             onValueChange = { },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 2.5.dp)
+                                .padding(vertical = 1.dp)
                                 .clickable {
                                     expand.value = 2
                                 },
@@ -387,11 +391,11 @@ fun VisitaPromotoresExpand(
                     //------------------------------OBJETIVO SEMANAL VISITA-------------------------------//
                     OutlinedTextField(
                         enabled = false,
-                        value = viewModelNV.getObjetSelect(),//objetivoSemanaal.value,
+                        value = viewModelNV.getObjetSelect(),
                         onValueChange = { },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 2.5.dp)
+                            .padding(vertical = 1.dp)
                             .clickable {
                                 expand.value = 1
                             },
@@ -427,7 +431,12 @@ fun VisitaPromotoresExpand(
                                     if (it) visita.elabLayout = 1
                                     else visita.elabLayout = 0
                                     viewModelNV.a()
-                                }
+                                },
+                                colors = CheckboxDefaults.colors(
+                                    checkedColor = colorResource(R.color.reds),
+                                    uncheckedColor = colorResource(R.color.graydark),
+                                    checkmarkColor = colorResource(R.color.white)
+                                ),
                             )
                         },
                         colors = TextFieldDefaults.textFieldColors(
@@ -503,7 +512,12 @@ fun AlertObjetivoSemanalMenu(
                                         onCheckedChange = {
                                             items.check = it
                                             checkbox.value = items.check
-                                        }
+                                        },
+                                        colors = CheckboxDefaults.colors(
+                                            checkedColor = colorResource(R.color.reds),
+                                            uncheckedColor = colorResource(R.color.graydark),
+                                            checkmarkColor = colorResource(R.color.white)
+                                        ),
                                     )
                                     Text(
                                         text = items.objetivo.toString(),
@@ -515,7 +529,7 @@ fun AlertObjetivoSemanalMenu(
                     }
                 } else {
                     Text(
-                        text = "Comprueba la conexion a internet",
+                        text = "",
                         modifier = Modifier.padding(10.dp)
                     )
                 }
@@ -581,7 +595,12 @@ fun AlertObjetivoSemanalMenu(
                                             viewModel.check_bingo(
                                                 items = items,
                                             )
-                                        }
+                                        },
+                                        colors = CheckboxDefaults.colors(
+                                            checkedColor = colorResource(R.color.reds),
+                                            uncheckedColor = colorResource(R.color.graydark),
+                                            checkmarkColor = colorResource(R.color.white)
+                                        ),
                                     )
                                     Text(
                                         text = items.objetivo.toString(),

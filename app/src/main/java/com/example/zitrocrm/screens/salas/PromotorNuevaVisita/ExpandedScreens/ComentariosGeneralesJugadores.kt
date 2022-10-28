@@ -88,7 +88,7 @@ fun ComentariosGeneralesJugadores(
                         Image(
                             painter = painterResource(id = R.drawable.comentarios),
                             contentDescription = "IconList",
-                            modifier = Modifier.padding(start = 10.dp)
+                            modifier = Modifier.size(40.dp).padding(start = 10.dp)
                         )
                     }
                     Column(
@@ -276,7 +276,7 @@ fun ComentariosGeneralesJugadoresExpand(
                             .clickable {
                                 alert.value = 1
                             },
-                        label = { Text("Juegos") },
+                        label = { Text("Librería") },
                         trailingIcon = {
                             Icon(icon, "contentDescription")
                         }, colors = TextFieldDefaults.textFieldColors(
@@ -293,7 +293,7 @@ fun ComentariosGeneralesJugadoresExpand(
                             .clickable {
                                 alert.value = 2
                             },
-                        label = { Text("Sub Juegos") },
+                        label = { Text("Juego") },
                         trailingIcon = {
                             Icon(icon, "contentDescription")
                         }, colors = TextFieldDefaults.textFieldColors(
@@ -589,7 +589,7 @@ fun AlertJuegosComent(
                                 }
                         )
                         Text(
-                            text = "SELECCIONA EL PRODUCTO",
+                            text = "SELECCIONA LA LIBRERIA",
                             modifier = Modifier.align(Alignment.CenterVertically)
                         )
                     }
@@ -644,7 +644,7 @@ fun AlertJuegosComent(
                                 }
                         )
                         Text(
-                            text = "SELECCIONA EL SUB JUEGO",
+                            text = "SELECCIONA EL JUEGO",
                             modifier = Modifier.align(Alignment.CenterVertically)
                         )
                     }

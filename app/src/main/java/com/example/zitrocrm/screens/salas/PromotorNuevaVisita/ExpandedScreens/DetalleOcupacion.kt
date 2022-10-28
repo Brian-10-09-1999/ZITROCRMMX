@@ -83,7 +83,7 @@ fun DetalleOcupacionCard(
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.detalles),
-                        contentDescription = "IconList",
+                        contentDescription = null,
                         modifier = Modifier.padding(start = 10.dp)
                     )
                 }

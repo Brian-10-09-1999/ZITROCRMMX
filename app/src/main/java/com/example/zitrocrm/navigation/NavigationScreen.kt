@@ -43,6 +43,7 @@ import com.example.zitrocrm.screens.salas.JuegosNuevosBingo.JuegosNuevosViewMode
 import com.example.zitrocrm.screens.salas.PromotorNewScreenn
 import com.example.zitrocrm.screens.salas.PromotorNuevaVisita.PromotorNuevaVisitaViewModel
 import com.example.zitrocrm.utils.AlertState
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable

@@ -1,5 +1,6 @@
 package com.example.zitrocrm.screens
 
+import android.Manifest
 import android.view.animation.OvershootInterpolator
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -21,8 +22,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.zitrocrm.R
 import com.example.zitrocrm.navigation.Destination
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.delay
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun SplashScreen(navController: NavController){
     Scaffold() {
@@ -36,6 +40,16 @@ fun SplashScreen(navController: NavController){
         val scale = remember {
             Animatable(0f)
         }
+        val cameraPermissionState =
+            rememberPermissionState(
+                permission = Manifest.permission.CAMERA)
+        val cameraPermissionState1 =
+            rememberPermissionState(
+                permission = Manifest.permission.READ_EXTERNAL_STORAGE)
+        val cameraPermissionState3 =
+            rememberPermissionState(
+                permission = Manifest.permission.WRITE_EXTERNAL_STORAGE)
+
         LaunchedEffect(key1 = true) {
             scale.animateTo(
                 targetValue = 0.7f,
@@ -47,6 +61,10 @@ fun SplashScreen(navController: NavController){
                 )
             )
             delay(3000L)
+            cameraPermissionState.launchPermissionRequest()
+            cameraPermissionState1.launchPermissionRequest()
+            cameraPermissionState3.launchPermissionRequest()
+
             navController.navigate(route = Destination.LoginScreen.route ){
                 popUpTo(route = Destination.SplashScreen.route) {
                     inclusive = true

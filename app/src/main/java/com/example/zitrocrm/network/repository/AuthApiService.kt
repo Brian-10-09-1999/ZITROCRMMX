@@ -1,6 +1,5 @@
 package com.example.zitrocrm.network.repository
 
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.example.zitrocrm.network.models_dto.CompetenciaJuegosBingo.PrioridadesDTO
 import com.example.zitrocrm.network.models_dto.DetalleOcupacionDto.*
 import com.example.zitrocrm.network.models_dto.Filter.ClienteFilter.ClienteFilter
@@ -17,12 +16,10 @@ import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.ObjSemanalFilte
 import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.PostVisitaPromotor
 import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.ProveedorFilter.ProveedoresDto
 import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.ProveedorFilter.Rows
+import com.example.zitrocrm.repository.Models.models_nueva_visita.RequestDocPhoto
 import com.example.zitrocrm.utils.Val_Constants
 import com.google.gson.annotations.SerializedName
 import okhttp3.MultipartBody
-import okhttp3.RequestBody
-import okhttp3.ResponseBody
-import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -89,12 +86,17 @@ interface AuthApiService {
         @SerializedName("ok"   ) var ok   : Boolean?        = null,
         @SerializedName("msg"   ) var msg   : String?        = null,
             )
-    @Multipart
     @POST(Val_Constants.API_DOC_FOTOGRAFICA)
+    @Multipart
     suspend fun postDocFoto(
         @Header("x-token") token:String,
-//        @Part files: List<MultipartBody.Part>,
-        @Part files: ArrayList<MultipartBody.Part>
+        /*@Field("fileType") fileType : ArrayList<Int>,
+        @Field("id") id:Int,*/
+        @Part file: ArrayList<MultipartBody.Part>,
+        @Part filetype: ArrayList<MultipartBody.Part>,
+        @Part ("id") id : Int
+
+        //@Body requestDocumentPhoto : RequestDocPhoto,
     ):Response<fsdf>
 
     @GET(Val_Constants.API_SALAS_COMPETENCIA_LIBRERIAS)

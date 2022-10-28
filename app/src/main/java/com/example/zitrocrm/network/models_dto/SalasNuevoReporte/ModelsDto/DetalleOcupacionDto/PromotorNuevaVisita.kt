@@ -1,8 +1,6 @@
 package com.example.zitrocrm.network.models_dto.DetalleOcupacionDto
 
-import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.GetVisita.RowsDO
 import com.google.gson.annotations.SerializedName
-
 
 data class  PromotorNuevaVisita (
 

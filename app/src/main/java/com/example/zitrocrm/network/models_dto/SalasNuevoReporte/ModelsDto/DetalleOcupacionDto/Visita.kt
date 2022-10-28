@@ -9,7 +9,6 @@ data class Visita (
   @SerializedName("fecha"                  ) var fecha                 : Fecha?          = Fecha(),
   @SerializedName("horaEntrada"            ) var horaEntrada           : Int?            = 0,
   @SerializedName("horaSalida"             ) var horaSalida            : Int?            = 0,
-  @SerializedName("objetivo"               ) var objetivo              : Int?            = 0,
   @SerializedName("objetivoSemanal"        ) var objetivoSemanal       : String?         = "",
   @SerializedName("observacionesGenerales") var observacionesGenerales : String?         = "",
   @SerializedName("propuestas"            ) var propuestas             : String?         = "",

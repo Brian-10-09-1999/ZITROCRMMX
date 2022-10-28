@@ -1,13 +1,15 @@
 package com.example.zitrocrm.screens.salas.PromotorNuevaVisita
 
+import android.app.Activity.RESULT_OK
 import android.content.Context
+import android.content.ContextWrapper
+import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
-import android.os.Build
+import android.os.Environment
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.core.net.toFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.zitrocrm.network.models_dto.DetalleOcupacionDto.*
@@ -28,11 +30,16 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
-import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.OutputStream
+import java.text.SimpleDateFormat
+import java.util.*
 import javax.inject.Inject
 import kotlin.collections.ArrayList
+
 
 val alertDetalleSave = mutableStateOf(false)
 
@@ -51,7 +58,6 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
     val objetivoSemanal = mutableStateListOf<Message>()
     val juegosObjetivo = mutableStateListOf<Message>()
     val objetivoSemanalFilter = mutableStateListOf<Message>()
-    val objetivoSemanalSelec = mutableStateListOf<Message>()
     var listHorarios = mutableStateListOf<Horarios>()
 
     fun texthours(): String {
@@ -387,38 +393,57 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
 
     val array_doc_foto = mutableStateListOf<ArrayFoto?>()
 
-    fun postfoto(arrayfotos: SnapshotStateList<ArrayFoto?>,context: Context) {
+    fun convertBitmapToFile(context: Context, bitmap: Bitmap): File{
+        val wrapper = ContextWrapper(context)
+        var file = wrapper.getDir("Images", Context.MODE_PRIVATE)
+        file = File(file,"${UUID.randomUUID()}.jpg")
+        val stream: OutputStream = FileOutputStream(file)
+        bitmap.compress(Bitmap.CompressFormat.JPEG,100,stream)
+        stream.flush()
+        stream.close()
+        return file
+    }
+
+    fun convertUritoFile(context: Context): File{
+        val wrapper = ContextWrapper(context)
+        var file = wrapper.getDir("Images", Context.MODE_PRIVATE)
+        file = File(file,"${UUID.randomUUID()}.jpg")
+        val stream: OutputStream = FileOutputStream(file)
+        stream.flush()
+        stream.close()
+        return file
+    }
+
+    fun postfoto(context: Context, id: Int) {
         viewModelScope.launch(Dispatchers.IO) {
+            val dataStorePreferenceRepository = SharedPrefence(context)
+            val token = dataStorePreferenceRepository.getToken().toString()
             val authService = RetrofitHelper.getAuthService()
+            val imagesParts = ArrayList<MultipartBody.Part>(array_doc_foto.size)
+            val typeFile = ArrayList<MultipartBody.Part>(array_doc_foto.size)
             try {
-                val imagesParts = ArrayList<MultipartBody.Part>(arrayfotos.size)
-                arrayfotos.forEach {
-                    val file = File("Teléfono/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Imagenes/IMG-20221024-WA0003.jpg")
-                    Log.d("file","file=="+file)
-                    val requestBody = RequestBody.create("image/jpeg".toMediaTypeOrNull(), file)//file.asRequestBody(contentType = "imagen/jpg".toMediaTypeOrNull())
+                array_doc_foto.forEach {
+
+                    val requestBody = convertBitmapToFile(context,it!!.Uri!!).asRequestBody("image/jpg".toMediaTypeOrNull())
                     imagesParts.add(
-                        MultipartBody.Part.createFormData("files",file.name, requestBody)
+                        MultipartBody.Part.createFormData("file", convertBitmapToFile(context,it.Uri!!).name, requestBody)
+                    )
+                    typeFile.add(
+                        MultipartBody.Part.createFormData("fileType", it.TipoFoto!!.idTipoFoto.toString())
                     )
                 }
                 val responseService =
                     authService.postDocFoto(
-                        token = "sdfqdfasdfaaaaaaaaaaaaaaaaaa",
-                        files = imagesParts
+                        token = token,
+                        file = imagesParts,
+                        filetype = typeFile,
+                        id = id
                     )
-
-                if (responseService.isSuccessful) {
-
-                }
-                imagesParts.forEach {
-                    Log.d("imagesParts", "imagesParts" + it.body)
-                    Log.d("imagesParts", "imagesParts" + it)
-                    Log.d("imagesParts", "imagesParts" + it.headers)
-                    Log.d("imagesParts", "imagesParts" + it.body)
-                    it.let { psrt ->
-                        Log.d("imagesParts", "imagesParts" + psrt.body.contentType())
-                        Log.d("imagesParts", "imagesParts" + psrt.body.contentLength())
-
-                    }
+                if(responseService.body()!!.ok!!){
+                    array_doc_foto.clear()
+                    Log.d("RESPONSE TRUE", "RESPONSE TRUE")
+                }else{
+                    Log.d("RESPONSE FALSE", "RESPONSE FALSE")
                 }
             } catch (e: Exception) {
                 Log.d("OOOODD", "DFGSDFGSDFGSDFGSDFGSDFGSDFG", e)
@@ -460,7 +485,8 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         hora_entrada.value = ""
         hora_salida.value = ""
         juegosObjetivo.forEach { it.check = false }
-        objetivoSemanal.forEach { it.check = false }
+        //objetivoSemanal.forEach { it.check = false }
+        objetivoSemanalFilter.clear()
         a()
     }
 
@@ -469,15 +495,13 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         a.value = true
     }
 
-    fun postVisitaPromotoresSala(token: String, salaid: String, b: Boolean) {
+    fun postVisitaPromotoresSala(token: String, salaid: String, b: Boolean,context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             val authService = RetrofitHelper.getAuthService()
             try {
-                objetivoSemanal.filter { it.check == true }
-                    .forEach { visitaPromotor.value!!.objetivos.add(it.id!!.toInt()) }
+                objetivoSemanal.filter { it.check == true }.forEach { visitaPromotor.value!!.objetivos.add(it.id!!.toInt()) }
                 visitaPromotor.value!!.visita!!.salaid = salaid.toInt()
-                juegosObjetivo.filter { it.check == true }
-                    .forEach { visitaPromotor.value!!.librerias.add(it.id!!.toInt()) }
+                juegosObjetivo.filter { it.check == true }.forEach { visitaPromotor.value!!.librerias.add(it.id!!.toInt()) }
                 visitaPromotor.value!!.send = b
                 listdetalleOcu.forEachIndexed { index, it ->
                     if (it.tipo == 1) {
@@ -522,11 +546,15 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                 val responseService = authService.postSalaVisitaPromotores(
                     token = token, visitaPromotor.value!!
                 )
-                if (responseService.isSuccessful && responseService.body()!!.message!!.id!! > 0) {
-                    networkstate_ID.value = responseService.body()!!.message!!.id!!.toInt()
-                    networkstate.value = responseService.body()!!.msg.toString()
-                    alertDetalleSave.value = true
-                    cleanReport()
+                if (responseService.isSuccessful) {
+                    if(responseService.body()!!.message!!.id!! > 0){
+                        networkstate_ID.value = responseService.body()!!.message!!.id!!.toInt()
+                        postfoto(context = context,responseService.body()!!.message!!.id!!)
+                        networkstate.value = responseService.body()!!.msg.toString()
+                        alertDetalleSave.value = true
+                        cleanReport()
+                    }
+
                 } else {
                     networkstate.value = responseService.body()!!.msg.toString()
                     alertDetalleSave.value = true
@@ -611,8 +639,7 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         if (getValidationSum(b)) B = b
         if (A == "") A = "0"
         if (B == "") B = "0"
-        return A.toInt() * 100 / B.toDouble()
-        a()
+        return A.toInt() * 100 / B.toDouble();a()
     }
 
     //Service api que nos devuelve las librerias
@@ -727,14 +754,14 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
     fun getNuevaVisitaFilters(token: String, tipo: Int, clear: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             if (clear) {
-                objetivoSemanalSelec.clear()
                 objetivoSemanalFilter.clear()
                 juegosObjetivo.clear()
+                objetivoSemanal.clear()
                 cleanReport()
             }
-            objetivoSemanal.clear()
             juegosFilter.clear()
             proveedorService.clear()
+            visitaPromotor.value!!.visita!!.tipo = tipo
             val authService = RetrofitHelper.getAuthService()
             try {
                 alertdialog(1, "")

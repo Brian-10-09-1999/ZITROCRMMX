@@ -1,13 +1,23 @@
 package com.example.zitrocrm.screens.salas.PromotorNuevaVisita.ExpandedScreens
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.content.ContentValues
 import android.content.Context
+import android.content.ContextWrapper
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.launch
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -26,23 +36,30 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.net.toFile
+import androidx.core.app.ActivityCompat.startActivityForResult
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider.getUriForFile
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.zitrocrm.R
 import com.example.zitrocrm.repository.Models.models_nueva_visita.ArrayFoto
 import com.example.zitrocrm.repository.Models.models_nueva_visita.TipoFoto
-import com.example.zitrocrm.screens.padding
 import com.example.zitrocrm.screens.salas.*
 import com.example.zitrocrm.screens.salas.PromotorNuevaVisita.PromotorNuevaVisitaViewModel
 import com.example.zitrocrm.ui.theme.blackdark
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
 
+
+@RequiresApi(Build.VERSION_CODES.O)
 @ExperimentalAnimationApi
 @SuppressLint("UnusedTransitionTargetStateParameter")
 @Composable
@@ -50,11 +67,112 @@ fun DcumentacionPhotoScreen(
     card10: String,
     onCardArrowClick: () -> Unit,
     expanded: Boolean,
-    viewModelNV: PromotorNuevaVisitaViewModel,
     context: Context,
-    arrayfotos: SnapshotStateList<ArrayFoto?>
+    arrayfotos: SnapshotStateList<ArrayFoto?>,
+    viewModelNV: PromotorNuevaVisitaViewModel
 
 ) {
+    val tipo_foto = listOf<TipoFoto>(
+        TipoFoto(categoria = 1, idTipoFoto = 1, TipoFoto = "Alineación de isla: Vista Frontal"),
+        TipoFoto(categoria = 1, idTipoFoto = 3, TipoFoto = "Alineación de isla: Vista Lateral"),
+        TipoFoto(categoria = 1, idTipoFoto = 4, TipoFoto = "Alineación de reposapiés"),
+        TipoFoto(categoria = 1, idTipoFoto = 5, TipoFoto = "Espacio entre máquinas"),
+        TipoFoto(categoria = 1, idTipoFoto = 6, TipoFoto = "Peinado general de isla"),
+        TipoFoto(categoria = 2, idTipoFoto = 7, TipoFoto = "Vista frontal (Derecha/Izquierda)"),
+        TipoFoto(categoria = 2, idTipoFoto = 8, TipoFoto = "Vista lateral (Derecha/Izquierda)"),
+        TipoFoto(categoria = 3, idTipoFoto = 9, TipoFoto = "Alineación de sing respecto a Isla"),
+        TipoFoto(categoria = 3, idTipoFoto = 10, TipoFoto = "Alineación de pantallas"),
+        TipoFoto(categoria = 3, idTipoFoto = 11, TipoFoto = "Estabilizadores"),
+    )
+
+    val tipo_seleccionado = remember { mutableStateOf<TipoFoto?>(null) }
+
+    val tipo_list = remember { mutableStateOf(false) }
+
+    val tip = if (tipo_seleccionado.value == null) "Selecciona tipo de fotografia"
+    else tipo_seleccionado.value!!.TipoFoto.toString()
+
+    val icon = if (tipo_list.value) Icons.Filled.KeyboardArrowUp
+    else Icons.Filled.KeyboardArrowDown
+
+    val image = remember { mutableStateOf<Bitmap?>(null) }
+
+    val viewImage = remember { mutableStateOf(false) }
+
+    val text = if (image.value == null) "Tomar fotografia"
+    else "Visualiza la imagen seleccionada"
+
+    ///
+    var hasImage by remember { mutableStateOf(false) }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+
+    var grantCameraState by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val cameraPermissionlauncher: ManagedActivityResultLauncher<String, Boolean> =
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestPermission()) {
+            grantCameraState = it
+        }
+
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+        Log.i("UriContent@Snapshot", imageUri.toString())
+        hasImage = success
+    }
+
+
+    /*val pictureResult = remember { mutableStateOf<Boolean?>(null)}
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) {
+        pictureResult.value = it
+        Toast.makeText(
+            context,
+            "${it}",
+            Toast.LENGTH_SHORT
+        ).show()
+
+    }
+    //val pictur = remember { mutableStateOf<Uri?>(Uri.EMPTY)}
+    val contentUri: Uri = getUriForFile(context, "Images", viewModelNV.convertUritoFile(context))
+
+    if(contentUri != null){
+        Toast.makeText(
+            context,
+            "${contentUri.path}",
+            Toast.LENGTH_SHORT
+        ).show()
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(contentUri)
+                .crossfade(true)
+                .build(),
+            contentDescription = "barcode image",
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .clip(RoundedCornerShape(10))
+                .height(400.dp)
+                .padding(8.dp),
+        )
+    }
+
+    pictureResult.value?.let { imageSaved ->
+        run {
+            // imageSaved is false
+        }
+    }
+    ////
+*/
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) {
+        image.value = it
+
+    }
+    /////---------------------------------------------------------------------------------////
+
+
     Card(
         backgroundColor = blackdark,
         shape = RoundedCornerShape(15.dp),
@@ -83,11 +201,6 @@ fun DcumentacionPhotoScreen(
                             modifier = Modifier
                                 .padding(start = 10.dp)
                         )
-                        /*Image(
-                            painter = painterResource(id = R.drawable.nota),
-                            contentDescription = "IconList",
-                            modifier = Modifier.padding(start = 10.dp)
-                        )*/
                     }
                     Column(
                         modifier = Modifier.weight(1f)
@@ -120,12 +233,72 @@ fun DcumentacionPhotoScreen(
             }
             DocumentExpand(
                 expanded = expanded,
-                viewModelNV = viewModelNV,
-                context = context,
-                arrayfotos = arrayfotos
+                arrayfotos = arrayfotos,
+                tipo_foto = tipo_foto,
+                tipo_seleccionado = tipo_seleccionado,
+                tipo_list = tipo_list,
+                tip = tip,
+                icon = icon,
+                image = image,
+                viewImage = viewImage,
+                text = text,
+                addButton = {
+                    tipo_list.value = false
+                    viewImage.value = false
+                    arrayfotos.add(
+                        ArrayFoto(
+                            Uri = image.value,
+                            TipoFoto = tipo_seleccionado.value
+                        )
+                    )
+                    tipo_seleccionado.value = null
+                    image.value = null
+                    Toast.makeText(context, "Agregaste correctamente la imagen.", Toast.LENGTH_SHORT)
+                        .show()
+                }, takePhoto = {
+                    if (grantCameraState) {
+                        launcher.launch()
+                        /*val uri = getCamImageUri(context)
+                        cameraLauncher.launch(uri)
+                        imageUri = uri
+                        // Set it to false here
+                        hasImage = false*/
+                    } else {
+                        cameraPermissionlauncher.launch(Manifest.permission.CAMERA)
+                    }
+                }
             )
+            if(hasImage && imageUri != null){
+                Log.i("UriContent@Render", imageUri.toString())
+
+                AsyncImage(
+                    imageUri,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
+}
+
+fun getCamImageUri(context: Context): Uri? {
+    var uri: Uri? = Uri.EMPTY
+    try {
+        uri = getUriForFile(context, "com.testsoft.camtest.fileProvider", createImageFile(context))
+    } catch (e: Exception) {
+        Log.e(ContentValues.TAG, "Error: ${e.message}")
+    }
+    return uri
+}
+
+private fun createImageFile(context: Context) : File {
+    val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
+    val imageDirectory = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+    return File.createTempFile(
+        "Camtest_Image_${timestamp}",
+        ".jpg",
+        imageDirectory
+    )
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -133,9 +306,17 @@ fun DcumentacionPhotoScreen(
 @Composable
 fun DocumentExpand(
     expanded: Boolean = true,
-    viewModelNV: PromotorNuevaVisitaViewModel,
-    context: Context,
-    arrayfotos: SnapshotStateList<ArrayFoto?>
+    arrayfotos: SnapshotStateList<ArrayFoto?>,
+    tipo_foto: List<TipoFoto>,
+    tipo_seleccionado: MutableState<TipoFoto?>,
+    tipo_list: MutableState<Boolean>,
+    tip: String,
+    icon: ImageVector,
+    image: MutableState<Bitmap?>,
+    viewImage: MutableState<Boolean>,
+    text: String,
+    addButton: () -> Unit,
+    takePhoto: () -> Unit,
 ) {
     AnimatedVisibility(
         visible = expanded,
@@ -148,55 +329,6 @@ fun DocumentExpand(
                 .background(Color.Black)
                 .padding(8.dp)
         ) {
-
-            val tipo_foto = listOf<TipoFoto>(
-                TipoFoto(categoria = 1, idTipoFoto = 1, TipoFoto = "Alineación de isla: Vista Frontal"),
-                TipoFoto(categoria = 1, idTipoFoto = 3, TipoFoto = "Alineación de isla: Vista Lateral"),
-                TipoFoto(categoria = 1, idTipoFoto = 4, TipoFoto = "Alineación de reposapiés"),
-                TipoFoto(categoria = 1, idTipoFoto = 5, TipoFoto = "Espacio entre máquinas"),
-                TipoFoto(categoria = 1, idTipoFoto = 6, TipoFoto = "Peinado general de isla"),
-                TipoFoto(categoria = 2, idTipoFoto = 7, TipoFoto = "Vista frontal (Derecha/Izquierda)"),
-                TipoFoto(categoria = 2, idTipoFoto = 8, TipoFoto = "Vista lateral (Derecha/Izquierda)"),
-                TipoFoto(categoria = 3, idTipoFoto = 9, TipoFoto = "Alineación de sing respecto a Isla"),
-                TipoFoto(categoria = 3, idTipoFoto = 10, TipoFoto = "Alineación de pantallas"),
-                TipoFoto(categoria = 3, idTipoFoto = 11, TipoFoto = "Estabilizadores"),
-                TipoFoto(categoria = 4, idTipoFoto = 12, TipoFoto = "Peinado Rack"),
-                TipoFoto(categoria = 4, idTipoFoto = 13, TipoFoto = "Peinado APC")
-            )
-            val tipo_seleccionado = remember {
-                mutableStateOf<TipoFoto?>(null)
-            }
-            var tipo_list by remember {
-                mutableStateOf(false)
-            }
-            val tip = if (tipo_seleccionado.value == null) "Selecciona tipo de imagen"
-            else tipo_seleccionado.value!!.TipoFoto.toString()
-            val icon = if (tipo_list)
-                Icons.Filled.KeyboardArrowUp
-            else
-                Icons.Filled.KeyboardArrowDown
-
-            val image = remember { mutableStateOf<Uri?>(null) }
-            val pickPictureLauncher = rememberLauncherForActivityResult(
-                ActivityResultContracts.GetContent()
-            ) { imageUri ->
-                if (imageUri != null) {
-                    image.value = imageUri
-                } else {
-                    Toast.makeText(
-                        context,
-                        "No seleccionaste una foto",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-            var viewImage by remember {
-                mutableStateOf(false)
-            }
-            val text = if (image.value == null) "Selecciona la imagen"
-            else "Visualiza la imagen seleccionada"
-
-            ///////////////////////////////////////////////////////////////////////////////////////
             Column(modifier = Modifier.padding(horizontal = 10.dp)) {
                 OutlinedTextField(
                     enabled = false,
@@ -207,7 +339,7 @@ fun DocumentExpand(
                         .padding(vertical = 2.5.dp),
                     trailingIcon = {
                         IconButton(onClick = {
-                            viewImage = !viewImage
+                            viewImage.value = !viewImage.value
                         }) {
                             Icon(Icons.Filled.Visibility, "contentDescription")
                         }
@@ -217,14 +349,14 @@ fun DocumentExpand(
                     ),
                     leadingIcon = {
                         IconButton(onClick = {
-                            pickPictureLauncher.launch("image/*")
+                            takePhoto.invoke()
                         }) {
                             Icon(Icons.Filled.AddAPhoto, "contentDescription")
                         }
                     }
                 )
 
-                AnimatedVisibility(visible = image.value != null && viewImage) {
+                AnimatedVisibility(visible = image.value != null && viewImage.value) {
                     Card(Modifier.fillMaxWidth()) {
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
@@ -235,7 +367,7 @@ fun DocumentExpand(
                             contentScale = ContentScale.Fit,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(10))
-                                .height(250.dp)
+                                .height(400.dp)
                                 .padding(8.dp),
                         )
                     }
@@ -249,9 +381,9 @@ fun DocumentExpand(
                         .fillMaxWidth()
                         .padding(vertical = 2.5.dp)
                         .clickable {
-                            tipo_list = !tipo_list
-                            viewImage = false
-                        }                    ,
+                            tipo_list.value = !tipo_list.value
+                            viewImage.value = false
+                        },
                     trailingIcon = {
                         Icon(icon, "contentDescription")
                     },
@@ -259,18 +391,21 @@ fun DocumentExpand(
                         textColor = Color.White
                     )
                 )
-                AnimatedVisibility (tipo_list) {
+                AnimatedVisibility(tipo_list.value) {
                     Column {
                         tipo_foto.forEach { item ->
                             Card(modifier = Modifier
                                 .padding(vertical = 2.dp)
                                 .fillMaxWidth()
                                 .clickable {
-                                    tipo_list = false
+                                    tipo_list.value = false
                                     tipo_seleccionado.value = item
                                 }
                             ) {
-                                Text(text = item.TipoFoto.toString(),modifier = Modifier.padding(vertical = 3.dp))
+                                Text(
+                                    text = item.TipoFoto.toString(),
+                                    modifier = Modifier.padding(vertical = 3.dp)
+                                )
                             }
                         }
                     }
@@ -279,16 +414,7 @@ fun DocumentExpand(
                     enabled =
                     if (tipo_seleccionado.value != null && image.value != null) true else false,
                     onClick = {
-                        tipo_list = false
-                        viewImage = false
-                        arrayfotos.add(
-                            ArrayFoto(
-                                Uri = image.value,
-                                TipoFoto = tipo_seleccionado.value
-                            )
-                        )
-                        tipo_seleccionado.value = null
-                        image.value = null
+                        addButton.invoke()
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -306,13 +432,11 @@ fun DocumentExpand(
                         tint = Color.White,
                         modifier = Modifier.padding(horizontal = 5.dp)
                     )
-                    Text(text = " AGREGAR IMAGEN", modifier = Modifier.padding(5.dp))
+                    Text(text = "AGREGAR IMAGEN", modifier = Modifier.padding(5.dp))
                 }
                 if (arrayfotos.isNotEmpty()) {
                     LazyRow {
                         itemsIndexed(arrayfotos) { index, it ->
-                            Log.d("arrayfotosarrayfotos", it!!.Uri!!.isAbsolute.toString())
-                            Log.d("arrayfotosarrayfotos", it!!.Uri!!.path.toString())
                             Card(
                                 modifier = Modifier
                                     .padding(5.dp)
@@ -322,20 +446,9 @@ fun DocumentExpand(
                                     Text(
                                         text = it!!.TipoFoto!!.TipoFoto.toString(),
                                         modifier = Modifier
-                                            .padding(end = 20.dp)
-                                            .align(Alignment.Start)
-                                    )
-                                    Text(
-                                        text = it.Uri.toString(),
-                                        modifier = Modifier
-                                            .padding(end = 20.dp)
-                                            .align(Alignment.Start)
-                                    )
-                                    Text(
-                                        text = it.Uri!!.path.toString(),
-                                        modifier = Modifier
-                                            .padding(end = 20.dp)
-                                            .align(Alignment.Start)
+                                            .padding(10.dp)
+                                            .align(Alignment.Start),
+                                        fontSize = 14.sp
                                     )
                                     AsyncImage(
                                         model = ImageRequest.Builder(LocalContext.current)
@@ -346,14 +459,13 @@ fun DocumentExpand(
                                         contentScale = ContentScale.Fit,
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(10))
-                                            .height(250.dp)
+                                            .size(200.dp)
                                             .padding(8.dp)
                                             .align(Alignment.CenterHorizontally),
                                     )
                                     IconButton(
                                         onClick = {
-                                            viewModelNV.postfoto(arrayfotos,context)
-                                            //arrayfotos.remove(it)
+                                            arrayfotos.remove(it)
                                         }, modifier = Modifier
                                             .align(Alignment.End)
                                     ) {

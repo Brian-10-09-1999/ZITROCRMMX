@@ -74,7 +74,7 @@ fun ComentariosSonidoZitroComp(
                         Image(
                             painter = painterResource(id = R.drawable.comentarios__1_),
                             contentDescription = "IconList",
-                            modifier = Modifier.padding(start = 10.dp)
+                            modifier = Modifier.size(40.dp).padding(start = 10.dp)
                         )
                     }
                     Column(

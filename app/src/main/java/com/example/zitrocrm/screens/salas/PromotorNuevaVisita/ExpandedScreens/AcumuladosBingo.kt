@@ -2,6 +2,7 @@ package com.example.zitrocrm.screens.salas.PromotorNuevaVisita.ExpandedScreens
 
 import android.annotation.SuppressLint
 import android.app.TimePickerDialog
+import android.content.Context
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -26,8 +27,10 @@ import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
@@ -58,6 +61,61 @@ fun AcumuladosBingoCard(
     viewModel: PromotorNuevaVisitaViewModel,
     acumulados: ArrayList<Acumulados>
 ) {
+    val inicio = remember { mutableStateOf("") }
+    val fin = remember { mutableStateOf("") }
+    val diferencia = remember { mutableStateOf("") }
+    val evento = remember { mutableStateOf("") }
+    val hora_inicio = remember { mutableStateOf("") }
+    val hora_fin = remember { mutableStateOf("") }
+    val premio = remember { mutableStateOf("") }
+    val alert_proveedor = remember { mutableStateOf(false) }
+    val proveedor_info = remember { mutableStateListOf("", "0", "0") }
+    val mCalendar = Calendar.getInstance()
+    val mHour = mCalendar[Calendar.HOUR_OF_DAY]
+    val mMinute = mCalendar[Calendar.MINUTE]
+    val context = LocalContext.current
+    val mTimePickerDialogInicio = TimePickerDialog(
+        context,R.style.DatePickerTheme,
+        { _, mHour: Int, mMinute: Int ->
+            if (mHour == 0) hora_inicio.value = "24"
+            else hora_inicio.value = mHour.toString()
+            if (hora_inicio.value.isNotBlank() && hora_fin.value.isNotBlank()) {
+                if (hora_fin.value.toInt() < hora_inicio.value.toInt()) {
+                    Toast.makeText(
+                        context,
+                        "La hora seleccionada es incorrecta",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    hora_inicio.value = ""
+                }
+            }
+        }, mHour, mMinute, true
+    )
+    val mTimePickerDialogFin = TimePickerDialog(
+        context,R.style.DatePickerTheme,
+        { _, mHour: Int, mMinute: Int ->
+            if (mHour == 0) hora_fin.value = "24"
+            else hora_fin.value = mHour.toString()
+
+            if (hora_inicio.value.isNotBlank() && hora_fin.value.isNotBlank()) {
+                if (hora_fin.value.toInt() < hora_inicio.value.toInt()) {
+                    Toast.makeText(
+                        context,
+                        "La hora seleccionada es incorrecta",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    hora_fin.value = ""
+                }
+            }
+        }, mHour, mMinute, true
+    )
+    val icon =
+        if (alert_proveedor.value)
+            Icons.Filled.KeyboardArrowUp
+        else
+            Icons.Filled.KeyboardArrowDown
+    val focusManager = LocalFocusManager.current
+
     Card(
         backgroundColor = blackdark,
         shape = RoundedCornerShape(15.dp),
@@ -78,7 +136,7 @@ fun AcumuladosBingoCard(
                     Column(
                         modifier = Modifier
                             .weight(0.15f)
-                            .align(Alignment.CenterVertically)
+                            .align(CenterVertically)
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.bingo),
@@ -106,7 +164,7 @@ fun AcumuladosBingoCard(
                     Column(
                         modifier = Modifier
                             .weight(0.15f)
-                            .align(Alignment.CenterVertically)
+                            .align(CenterVertically)
                     ) {
                         CardArrow(
                             onClick = onCardArrowClick,
@@ -118,7 +176,20 @@ fun AcumuladosBingoCard(
             AcumuladosBingoExpand(
                 expanded = expanded,
                 viewModel = viewModel,
-                acumulados = acumulados
+                acumulados = acumulados,
+                inicio = inicio,
+                fin = fin,
+                diferencia = diferencia,
+                evento = evento,
+                hora_inicio = hora_inicio,
+                hora_fin = hora_fin,
+                premio = premio,
+                alert_proveedor = alert_proveedor,
+                proveedor_info = proveedor_info,
+                mTimePickerDialogInicio = mTimePickerDialogInicio,
+                mTimePickerDialogFin = mTimePickerDialogFin,
+                icon = icon,
+                focusManager = focusManager
             )
         }
     }
@@ -129,81 +200,40 @@ fun AcumuladosBingoCard(
 fun AcumuladosBingoExpand(
     expanded: Boolean = true,
     viewModel: PromotorNuevaVisitaViewModel,
-    acumulados: ArrayList<Acumulados>
+    acumulados: ArrayList<Acumulados>,
+    inicio: MutableState<String>,
+    fin: MutableState<String>,
+    diferencia: MutableState<String>,
+    evento: MutableState<String>,
+    hora_inicio: MutableState<String>,
+    hora_fin: MutableState<String>,
+    premio: MutableState<String>,
+    alert_proveedor: MutableState<Boolean>,
+    proveedor_info: SnapshotStateList<String>,
+    mTimePickerDialogInicio: TimePickerDialog,
+    mTimePickerDialogFin: TimePickerDialog,
+    icon: ImageVector,
+    focusManager: FocusManager
 ) {
     AnimatedVisibility(
         visible = expanded,
         enter = enterExpand + enterFadeIn,
         exit = exitCollapse + exitFadeOut
     ) {
-        val inicio = remember { mutableStateOf("") }
-        val fin = remember { mutableStateOf("") }
-        val diferencia = remember { mutableStateOf("") }
-        val evento = remember { mutableStateOf("") }
-        val hora_inicio = remember { mutableStateOf("") }
-        val hora_fin = remember { mutableStateOf("") }
-        val premio = remember { mutableStateOf("") }
-        val alert_proveedor = remember { mutableStateOf(false) }
-        val proveedor_info = remember { mutableStateListOf("", "0", "0") }
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color.Black)
                 .padding(15.dp)
         ) {
-            val mCalendar = Calendar.getInstance()
-            val mHour = mCalendar[Calendar.HOUR_OF_DAY]
-            val mMinute = mCalendar[Calendar.MINUTE]
-            val context = LocalContext.current
-            val mTimePickerDialogInicio = TimePickerDialog(
-                context,
-                { _, mHour: Int, mMinute: Int ->
-                    if (mHour == 0) hora_inicio.value = "24"
-                    else hora_inicio.value = mHour.toString()
-                    if (hora_inicio.value.isNotBlank() && hora_fin.value.isNotBlank()) {
-                        if (hora_fin.value.toInt() < hora_inicio.value.toInt()) {
-                            Toast.makeText(
-                                context,
-                                "La hora seleccionada es incorrecta",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            hora_inicio.value = ""
-                        }
-                    }
-                }, mHour, mMinute, true
-            )
-            val mTimePickerDialogFin = TimePickerDialog(
-                context,
-                { _, mHour: Int, mMinute: Int ->
-                    if (mHour == 0) hora_fin.value = "24"
-                    else hora_fin.value = mHour.toString()
-
-                    if (hora_inicio.value.isNotBlank() && hora_fin.value.isNotBlank()) {
-                        if (hora_fin.value.toInt() < hora_inicio.value.toInt()) {
-                            Toast.makeText(
-                                context,
-                                "La hora seleccionada es incorrecta",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            hora_fin.value = ""
-                        }
-                    }
-                }, mHour, mMinute, true
-            )
-            val icon =
-                if (alert_proveedor.value)
-                    Icons.Filled.KeyboardArrowUp
-                else
-                    Icons.Filled.KeyboardArrowDown
-            val focusManager = LocalFocusManager.current
+//---------------------------------------------SELECCIONA PROVEEDOR-----------------------------------------//
             OutlinedTextField(
                 enabled = false,
                 value = proveedor_info[0],
                 onValueChange = {},
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 2.5.dp)
+                    .padding(vertical = 1.dp)
                     .clickable {
                         alert_proveedor.value = true
                     },
@@ -224,8 +254,9 @@ fun AcumuladosBingoExpand(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 2.5.dp)
+                    .padding(vertical = 1.dp)
             ) {
+//---------------------------------------------INICIO DEL ACUMULADO-----------------------------------------//
                 OutlinedTextField(
                     value = inicio.value,
                     onValueChange = {
@@ -259,6 +290,7 @@ fun AcumuladosBingoExpand(
                     )
                 )
                 Spacer(Modifier.width(5.dp))
+//---------------------------------------------FIN DEL ACUMULADO-----------------------------------------//
                 OutlinedTextField(
                     value = fin.value,
                     onValueChange = {
@@ -292,16 +324,17 @@ fun AcumuladosBingoExpand(
                     )
                 )
             }
+//---------------------------------------------DIFERENCIA DEL INICIO Y FIN-----------------------------------------//
             OutlinedTextField(
                 enabled = false,
                 value = diferencia.value,
                 onValueChange = {},
                 modifier = Modifier
-                    .padding(vertical = 2.5.dp)
+                    .padding(vertical = 1.dp)
                     .fillMaxWidth(),
                 label = { Text("Diferencia") },
                 leadingIcon = {
-                    Icon(Icons.Filled.Timer, "contentDescription", tint = Color.White)
+                    Icon(Icons.Filled.MonetizationOn, "contentDescription")
                 },
                 keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.Next,
@@ -311,12 +344,13 @@ fun AcumuladosBingoExpand(
                     textColor = Color.White
                 )
             )
+//---------------------------------------------AGREGA EVENTO-----------------------------------------//
             OutlinedTextField(
                 value = evento.value,
                 onValueChange = { evento.value = it },
                 label = { Text("Evento") },
                 modifier = Modifier
-                    .padding(vertical = 2.5.dp)
+                    .padding(vertical = 1.dp)
                     .fillMaxWidth(),
                 keyboardOptions = KeyboardOptions.Default.copy(
                     keyboardType = KeyboardType.Text,
@@ -328,14 +362,15 @@ fun AcumuladosBingoExpand(
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Filled.Event,
-                        contentDescription = "Precio Inicio"
+                        contentDescription = null
                     )
                 },
                 colors = TextFieldDefaults.textFieldColors(
                     textColor = Color.White
                 )
             )
-            Row(modifier = Modifier.padding(vertical = 2.5.dp)) {
+//-------------------------------------------SELECCIONA HORA INICIO------------------------------------------//
+            Row(modifier = Modifier.padding(vertical = 1.dp)) {
                 OutlinedTextField(
                     enabled = false,
                     value = hora_inicio.value,
@@ -350,23 +385,19 @@ fun AcumuladosBingoExpand(
                     leadingIcon = {
                         Icon(
                             Icons.Filled.Timer,
-                            "contentDescription",
-                            tint = Color.White
+                            "contentDescription"
                         )
                     },
-                    keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Next,
-                        keyboardType = KeyboardType.Number
-                    ),
-                    colors = TextFieldDefaults.textFieldColors(
-                        textColor = Color.White
-                    ),
                     trailingIcon = {
                         if (hora_inicio.value.isNotBlank()) {
                             Text("Hrs")
                         }
-                    }
+                    },
+                    colors = TextFieldDefaults.textFieldColors(
+                        textColor = Color.White
+                    ),
                 )
+//-------------------------------------------SELECCIONA HORA FIN------------------------------------------//
                 OutlinedTextField(
                     enabled = false,
                     value = hora_fin.value,
@@ -381,14 +412,9 @@ fun AcumuladosBingoExpand(
                     leadingIcon = {
                         Icon(
                             Icons.Filled.Timer,
-                            "contentDescription",
-                            tint = Color.White
+                            "contentDescription"
                         )
                     },
-                    keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Next,
-                        keyboardType = KeyboardType.Number
-                    ),
                     colors = TextFieldDefaults.textFieldColors(
                         textColor = Color.White
                     ),
@@ -399,12 +425,13 @@ fun AcumuladosBingoExpand(
                     }
                 )
             }
+//-------------------------------------------AGREGA PREMIO DEL ACUMULADO------------------------------------------//
             OutlinedTextField(
                 value = premio.value,
                 onValueChange = { premio.value = it },
                 label = { Text("Premio") },
                 modifier = Modifier
-                    .padding(vertical = 2.5.dp)
+                    .padding(vertical = 1.dp)
                     .fillMaxWidth(),
                 keyboardOptions = KeyboardOptions.Default.copy(
                     keyboardType = KeyboardType.Text,
@@ -423,6 +450,7 @@ fun AcumuladosBingoExpand(
                     textColor = Color.White
                 ),
             )
+//-----------------------------------------VALIDACIONES DEL BOTTON------------------------------------------//
             val isValidate by derivedStateOf {
                 proveedor_info[0].isNotBlank()
                         && proveedor_info[1].toInt() > 0
@@ -436,6 +464,8 @@ fun AcumuladosBingoExpand(
                         && premio.value.isNotBlank()
                         && proveedor_info[0].isNotBlank()
                         && proveedor_info[1].toInt() > 0
+                        && inicio.value.isNotBlank()
+                        && fin.value.isNotBlank()
             }
             val isValidate3 by derivedStateOf {
                 evento.value.isNotBlank()
@@ -449,6 +479,7 @@ fun AcumuladosBingoExpand(
                 targetValue = if (isRotated.value) 360F else 0F,
                 animationSpec = tween(durationMillis = 500, easing = FastOutLinearInEasing)
             )
+//-----------------------------------------BTN AGREGAR ACUMULADO------------------------------------------//
             Button(
                 enabled = if (isValidate3) isValidate2 else isValidate,
                 onClick = {
@@ -497,7 +528,7 @@ fun AcumuladosBingoExpand(
 
 
 @Composable
-fun dataItemAcumulado(
+fun DataItemAcumulado(
     item: Acumulados,
     index: Int,
     viewModelNV: PromotorNuevaVisitaViewModel
@@ -623,7 +654,7 @@ fun dataItemAcumulado(
             }
             IconButton(onClick = {
                 viewModelNV.removeAcumulados(item)
-            }) {
+            },modifier = Modifier.size(20.dp)) {
                 Icon(
                     imageVector = Icons.Filled.Delete,
                     contentDescription = "delete"

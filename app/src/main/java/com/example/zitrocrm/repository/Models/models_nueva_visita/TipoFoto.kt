@@ -13,7 +13,7 @@ data class TipoFoto (
 )
 
 data class ArrayFoto(
-    @SerializedName("Uri"              ) var Uri     : Uri?                = null,
+    @SerializedName("Uri"              ) var Uri: Bitmap? = null,
     @SerializedName("TipoFoto"         ) var TipoFoto: TipoFoto?           = null,
 )
 data class DocPhotoRequest(

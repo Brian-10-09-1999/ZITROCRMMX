@@ -148,7 +148,7 @@ fun ObjetivoVisitaExpand(
                         },
                         label = { Text("Actividad") },
                         modifier = Modifier
-                            .padding(vertical = 2.5.dp)
+                            .padding(vertical = 1.dp)
                             .fillMaxWidth(),
                         leadingIcon = {
                             Icon(
@@ -169,7 +169,7 @@ fun ObjetivoVisitaExpand(
                         },
                         label = { Text("¿Qué haces para realizar la actividad?") },
                         modifier = Modifier
-                            .padding(vertical = 2.5.dp)
+                            .padding(vertical = 1.dp)
                             .fillMaxWidth(),
                         leadingIcon = {
                             Icon(
@@ -195,7 +195,7 @@ fun visita_observacion(visita: Visita) {
         var conclusion by remember { mutableStateOf(visita.conclusion) }
         var observacionesGenerales by remember { mutableStateOf(visita.observacionesGenerales) }
         val focusManager = LocalFocusManager.current
-        //-----------------------------------PROPUESTA VISITA---------------------------------------
+//---------------------------------------PROPUESTA VISITA-----------------------------------------//
         OutlinedTextField(
             value = propuestas.toString(),
             onValueChange = {
@@ -221,6 +221,7 @@ fun visita_observacion(visita: Visita) {
                 textColor = Color.White
             )
         )
+//---------------------------------------CONCLUSION VISITA-----------------------------------------//
         OutlinedTextField(
             value = conclusion.toString(),
             onValueChange = {
@@ -246,6 +247,7 @@ fun visita_observacion(visita: Visita) {
                 textColor = Color.White
             )
         )
+//---------------------------------------OBSERVACIONES GENERALES VISITA-----------------------------------------//
         OutlinedTextField(
             value = observacionesGenerales.toString(),
             onValueChange = {
