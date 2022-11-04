@@ -2,25 +2,20 @@ package com.example.zitrocrm.screens.salas.PromotorNuevaVisita.ExpandedScreens
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.ContentValues
 import android.content.Context
-import android.content.ContextWrapper
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
-import android.os.Environment
-import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.result.launch
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -43,10 +38,9 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.app.ActivityCompat.startActivityForResult
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider.getUriForFile
 import coil.compose.AsyncImage
+import coil.compose.rememberImagePainter
 import coil.request.ImageRequest
 import com.example.zitrocrm.R
 import com.example.zitrocrm.repository.Models.models_nueva_visita.ArrayFoto
@@ -54,9 +48,8 @@ import com.example.zitrocrm.repository.Models.models_nueva_visita.TipoFoto
 import com.example.zitrocrm.screens.salas.*
 import com.example.zitrocrm.screens.salas.PromotorNuevaVisita.PromotorNuevaVisitaViewModel
 import com.example.zitrocrm.ui.theme.blackdark
+import kotlinx.coroutines.runBlocking
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.*
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -84,27 +77,19 @@ fun DcumentacionPhotoScreen(
         TipoFoto(categoria = 3, idTipoFoto = 10, TipoFoto = "Alineación de pantallas"),
         TipoFoto(categoria = 3, idTipoFoto = 11, TipoFoto = "Estabilizadores"),
     )
-
     val tipo_seleccionado = remember { mutableStateOf<TipoFoto?>(null) }
-
     val tipo_list = remember { mutableStateOf(false) }
-
     val tip = if (tipo_seleccionado.value == null) "Selecciona tipo de fotografia"
     else tipo_seleccionado.value!!.TipoFoto.toString()
-
     val icon = if (tipo_list.value) Icons.Filled.KeyboardArrowUp
     else Icons.Filled.KeyboardArrowDown
-
-    val image = remember { mutableStateOf<Bitmap?>(null) }
-
+    //val imageUri = remember { mutableStateOf<Bitmap?>(null) }
     val viewImage = remember { mutableStateOf(false) }
-
-    val text = if (image.value == null) "Tomar fotografia"
-    else "Visualiza la imagen seleccionada"
-
     ///
     var hasImage by remember { mutableStateOf(false) }
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var imageUri = remember { mutableStateOf<Uri?>(null) }
+    val text = if (imageUri.value == null) "Tomar fotografia"
+    else "Visualiza la imagen seleccionada"
 
     var grantCameraState by remember {
         mutableStateOf(
@@ -120,56 +105,20 @@ fun DcumentacionPhotoScreen(
             grantCameraState = it
         }
 
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-        Log.i("UriContent@Snapshot", imageUri.toString())
-        hasImage = success
-    }
-
-
-    /*val pictureResult = remember { mutableStateOf<Boolean?>(null)}
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) {
-        pictureResult.value = it
-        Toast.makeText(
-            context,
-            "${it}",
-            Toast.LENGTH_SHORT
-        ).show()
-
-    }
-    //val pictur = remember { mutableStateOf<Uri?>(Uri.EMPTY)}
-    val contentUri: Uri = getUriForFile(context, "Images", viewModelNV.convertUritoFile(context))
-
-    if(contentUri != null){
-        Toast.makeText(
-            context,
-            "${contentUri.path}",
-            Toast.LENGTH_SHORT
-        ).show()
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(contentUri)
-                .crossfade(true)
-                .build(),
-            contentDescription = "barcode image",
-            contentScale = ContentScale.Fit,
-            modifier = Modifier
-                .clip(RoundedCornerShape(10))
-                .height(400.dp)
-                .padding(8.dp),
-        )
-    }
-
-    pictureResult.value?.let { imageSaved ->
-        run {
-            // imageSaved is false
+    val cameraLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+            Log.i("UriContent@Snapshot", imageUri.value.toString())
+            hasImage = success
+            if (success == false) {
+                imageUri.value = null
+            }
         }
-    }
-    ////
-*/
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) {
-        image.value = it
 
-    }
+
+    /* val launcher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) {
+         imageUri.value = it
+
+     }*/
     /////---------------------------------------------------------------------------------////
 
 
@@ -239,7 +188,7 @@ fun DcumentacionPhotoScreen(
                 tipo_list = tipo_list,
                 tip = tip,
                 icon = icon,
-                image = image,
+                image = imageUri,
                 viewImage = viewImage,
                 text = text,
                 addButton = {
@@ -247,58 +196,34 @@ fun DcumentacionPhotoScreen(
                     viewImage.value = false
                     arrayfotos.add(
                         ArrayFoto(
-                            Uri = image.value,
+                            Uri = imageUri.value,
                             TipoFoto = tipo_seleccionado.value
                         )
                     )
                     tipo_seleccionado.value = null
-                    image.value = null
-                    Toast.makeText(context, "Agregaste correctamente la imagen.", Toast.LENGTH_SHORT)
-                        .show()
-                }, takePhoto = {
+                    imageUri.value = null
+                    Toast.makeText(
+                        context,
+                        "Agregaste correctamente la imagen.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                },
+                takePhoto = {
                     if (grantCameraState) {
-                        launcher.launch()
-                        /*val uri = getCamImageUri(context)
-                        cameraLauncher.launch(uri)
-                        imageUri = uri
+                        //launcher.launch()
+                        val uri = viewModelNV.getCamImageUri(context)
+                                cameraLauncher.launch(uri)
+                        imageUri.value = uri
                         // Set it to false here
-                        hasImage = false*/
+                        hasImage = false
                     } else {
                         cameraPermissionlauncher.launch(Manifest.permission.CAMERA)
                     }
-                }
+                },
+                viewModelNV = viewModelNV
             )
-            if(hasImage && imageUri != null){
-                Log.i("UriContent@Render", imageUri.toString())
-
-                AsyncImage(
-                    imageUri,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
         }
     }
-}
-
-fun getCamImageUri(context: Context): Uri? {
-    var uri: Uri? = Uri.EMPTY
-    try {
-        uri = getUriForFile(context, "com.testsoft.camtest.fileProvider", createImageFile(context))
-    } catch (e: Exception) {
-        Log.e(ContentValues.TAG, "Error: ${e.message}")
-    }
-    return uri
-}
-
-private fun createImageFile(context: Context) : File {
-    val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
-    val imageDirectory = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-    return File.createTempFile(
-        "Camtest_Image_${timestamp}",
-        ".jpg",
-        imageDirectory
-    )
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -312,11 +237,12 @@ fun DocumentExpand(
     tipo_list: MutableState<Boolean>,
     tip: String,
     icon: ImageVector,
-    image: MutableState<Bitmap?>,
+    image: MutableState<Uri?>,
     viewImage: MutableState<Boolean>,
     text: String,
     addButton: () -> Unit,
     takePhoto: () -> Unit,
+    viewModelNV: PromotorNuevaVisitaViewModel,
 ) {
     AnimatedVisibility(
         visible = expanded,
@@ -341,7 +267,9 @@ fun DocumentExpand(
                         IconButton(onClick = {
                             viewImage.value = !viewImage.value
                         }) {
-                            Icon(Icons.Filled.Visibility, "contentDescription")
+                            val color =
+                                if (viewImage.value) colorResource(id = R.color.reds) else Color.Gray
+                            Icon(Icons.Filled.Visibility, "contentDescription", tint = color)
                         }
                     },
                     colors = TextFieldDefaults.textFieldColors(
@@ -350,12 +278,14 @@ fun DocumentExpand(
                     leadingIcon = {
                         IconButton(onClick = {
                             takePhoto.invoke()
+                            viewImage.value = false
                         }) {
-                            Icon(Icons.Filled.AddAPhoto, "contentDescription")
+                            val color =
+                                if (image.value != null) colorResource(id = R.color.reds) else Color.Gray
+                            Icon(Icons.Filled.PhotoCamera, "contentDescription", tint = color)
                         }
                     }
                 )
-
                 AnimatedVisibility(visible = image.value != null && viewImage.value) {
                     Card(Modifier.fillMaxWidth()) {
                         AsyncImage(
@@ -363,7 +293,7 @@ fun DocumentExpand(
                                 .data(image.value)
                                 .crossfade(true)
                                 .build(),
-                            contentDescription = "barcode image",
+                            contentDescription = null,
                             contentScale = ContentScale.Fit,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(10))

@@ -74,7 +74,7 @@ dependencies {
     //Camera
     implementation 'androidx.core:core-ktx:1.9.0'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'
-    implementation 'androidx.activity:activity-compose:1.6.0'
+    implementation 'androidx.activity:activity-compose:1.6.1'
     implementation 'androidx.camera:camera-lifecycle:1.1.0'
     implementation 'androidx.camera:camera-view:1.1.0'
     //
@@ -108,6 +108,7 @@ dependencies {
     implementation "androidx.camera:camera-lifecycle:$camerax_version-alpha03"
 // CameraX View class
     implementation "androidx.camera:camera-view:1.0.0-alpha27"
+//Image - compress -https://github.com/zetbaitsu/Compressor
+    implementation 'id.zelory:compressor:3.0.1'
 
-    
 }

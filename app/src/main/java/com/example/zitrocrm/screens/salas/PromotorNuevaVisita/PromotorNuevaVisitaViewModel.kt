@@ -1,17 +1,22 @@
 package com.example.zitrocrm.screens.salas.PromotorNuevaVisita
 
-import android.app.Activity.RESULT_OK
+import android.content.ContentValues
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
+import android.database.Cursor
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Environment
+import android.provider.OpenableColumns
 import android.util.Log
+import android.webkit.MimeTypeMap
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.zitrocrm.BuildConfig
 import com.example.zitrocrm.network.models_dto.DetalleOcupacionDto.*
 import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.Competencia.CompetenciaArray
 import com.example.zitrocrm.network.models_dto.SalasNuevoReporte.FoliosTecnicos.rows
@@ -25,20 +30,18 @@ import com.example.zitrocrm.repository.Models.models_nueva_visita.ArrayFoto
 import com.example.zitrocrm.repository.SharedPrefence
 import com.example.zitrocrm.screens.login.components.alertdialog
 import dagger.hilt.android.lifecycle.HiltViewModel
+import id.zelory.compressor.Compressor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.OutputStream
+import java.io.*
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
-import kotlin.collections.ArrayList
 
 
 val alertDetalleSave = mutableStateOf(false)
@@ -65,20 +68,14 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         listHorarios.forEach { item -> text = "${text}${item.horario}," }
         return text
     }
-
     fun getObjetivoString(): String {
         var obj = ""
-        juegosObjetivo.filter { it.check == true }.forEach {
-            obj = obj + "${it.objetivo}, "
-        }
+        juegosObjetivo.filter { it.check == true }.forEach { obj = obj + "${it.objetivo}, " }
         return obj
     }
-
     fun getObjetSelect(): String {
         var obj = ""
-        objetivoSemanal.filter { it.check == true }.forEach {
-            obj = obj + "${it.objetivo}, "
-        }
+        objetivoSemanal.filter { it.check == true }.forEach { obj = obj + "${it.objetivo}, " }
         return obj
     }
 
@@ -403,15 +400,34 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         stream.close()
         return file
     }
+    fun getCamImageUri(context: Context): Uri? {
+        var uri: Uri? = null
+        try {
+            uri = FileProvider.getUriForFile(Objects.requireNonNull(context), BuildConfig.APPLICATION_ID + ".provider", createImageFile(context))
+            //uri = getUriForFile(context, "com.testsoft.camtest.fileProvider", c)
+        } catch (e: Exception) {
+            Log.e(ContentValues.TAG, "Error: ${e.message}")
+        }
+        return uri
+    }
 
-    fun convertUritoFile(context: Context): File{
-        val wrapper = ContextWrapper(context)
-        var file = wrapper.getDir("Images", Context.MODE_PRIVATE)
-        file = File(file,"${UUID.randomUUID()}.jpg")
-        val stream: OutputStream = FileOutputStream(file)
-        stream.flush()
-        stream.close()
-        return file
+    private fun createImageFile(context: Context) : File {
+        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
+        val imageDirectory = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        context.getExternalFilesDir(null).toString()
+        imageDirectory!!.mkdirs()
+        return File.createTempFile(
+            "Camtest_Image_${timestamp}",
+            ".jpg",
+            imageDirectory
+        )
+    }
+    fun compresssss (context: Context, value: Uri?):File{
+        var file : File? = null
+        viewModelScope.launch(Dispatchers.IO) {
+            file = Compressor.compress(context, File(value!!.path!!))
+        }
+        return file!!.absoluteFile
     }
 
     fun postfoto(context: Context, id: Int) {
@@ -423,10 +439,18 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
             val typeFile = ArrayList<MultipartBody.Part>(array_doc_foto.size)
             try {
                 array_doc_foto.forEach {
-
-                    val requestBody = convertBitmapToFile(context,it!!.Uri!!).asRequestBody("image/jpg".toMediaTypeOrNull())
+                   /* val requestBody = convertBitmapToFile(context,it!!.Uri!!).asRequestBody("image/jpg".toMediaTypeOrNull())
                     imagesParts.add(
                         MultipartBody.Part.createFormData("file", convertBitmapToFile(context,it.Uri!!).name, requestBody)
+                    )
+                    typeFile.add(
+                        MultipartBody.Part.createFormData("fileType", it.TipoFoto!!.idTipoFoto.toString())
+                    )*/
+
+                    val requestBody = File(it!!.Uri!!.path!!).asRequestBody("image/jpg".toMediaTypeOrNull())
+                    Log.d("REQUESTBODY", requestBody.toString())
+                    imagesParts.add(
+                        MultipartBody.Part.createFormData("file", it.Uri!!.path+".jpg" ,requestBody )
                     )
                     typeFile.add(
                         MultipartBody.Part.createFormData("fileType", it.TipoFoto!!.idTipoFoto.toString())
@@ -450,8 +474,7 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
             }
         }
     }
-
-
+    //--------------------------------------------------------------------------------------//
     val juegosFilter = mutableStateListOf<Juegos>()
     val foliostecnicossalas: MutableList<rows> = arrayListOf()
     val proveedores_selections = mutableStateListOf<Rows>()
@@ -487,6 +510,7 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
         juegosObjetivo.forEach { it.check = false }
         //objetivoSemanal.forEach { it.check = false }
         objetivoSemanalFilter.clear()
+        objetivoSemanal.forEach{ it.check = false }
         a()
     }
 
@@ -553,6 +577,9 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
                         networkstate.value = responseService.body()!!.msg.toString()
                         alertDetalleSave.value = true
                         cleanReport()
+                    }else {
+                        networkstate.value = responseService.body()!!.msg.toString()
+                        alertDetalleSave.value = true
                     }
 
                 } else {
@@ -737,17 +764,14 @@ class PromotorNuevaVisitaViewModel @Inject constructor(
 //-----------------------------------------------------------FUN API GET FILTROS DE NUEVA VISITA--------------------------------------------------------//
 
     fun check_bingo(items: Message) {
-        if (items.check!! && objetivoSemanalFilter.filter { it.juegoidfk == items.id }
-                .isEmpty()) objetivoSemanalFilter += objetivoSemanal.filter { it.juegoidfk == items.id }
-        else objetivoSemanalFilter.filter { it.juegoidfk == items.id }.forEach {
-            objetivoSemanalFilter.remove(
-                Message(
-                    id = it.id,
-                    objetivo = it.objetivo,
-                    check = it.check,
-                    juegoidfk = it.juegoidfk
-                )
-            )
+        if (items.check!! && objetivoSemanalFilter.filter { it.juegoidfk == items.id }.isEmpty()) objetivoSemanalFilter += objetivoSemanal.filter { it.juegoidfk == items.id }
+        else if(items.check!! == false && objetivoSemanalFilter.filter { it.juegoidfk == items.id }.isNotEmpty()) {
+            objetivoSemanalFilter.filter { it.juegoidfk == items.id }.forEach {
+                objetivoSemanalFilter.remove(it)
+            }
+            objetivoSemanal.filter { it.juegoidfk == items.id }.forEach{
+                it.check = false
+            }
         }
     }
 

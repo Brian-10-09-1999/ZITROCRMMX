@@ -537,14 +537,17 @@ fun ContentNuevaVisita(
 
                     //------------------------BTN GUARDAR-----------------------------//
                     Button(
-                        enabled = isValidate,
+                       // enabled = isValidate,
                         onClick = {
-                            viewModelNV.postVisitaPromotoresSala(
+                            viewModelNV.postfoto(context,181)
+
+                            /*viewModelNV.postVisitaPromotoresSala(
                                 token = token,
                                 salaid = salaid,
                                 b = false,
                                 context = context
                             )
+                            */
                             isRotated.value = !isRotated.value
                         },
                         modifier = Modifier

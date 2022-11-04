@@ -462,8 +462,7 @@ fun AlertObjetivoSemanalMenu(
     openclose: MutableState<Int>,
     objetivoSemJuego: SnapshotStateList<Message>
 ) {
-    val objetivoSemanal =
-        if (viewModel.tipo.value) viewModel.objetivoSemanal else viewModel.objetivoSemanalFilter
+    val objetivoSemanal = if (viewModel.tipo.value) viewModel.objetivoSemanal else viewModel.objetivoSemanalFilter
     if (openclose.value == 1) {
         AlertDialog(
             onDismissRequest = {

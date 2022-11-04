@@ -1,10 +1,7 @@
 package com.example.zitrocrm.repository.Models.models_nueva_visita
 
-import android.graphics.Bitmap
 import android.net.Uri
-import android.util.Base64
 import com.google.gson.annotations.SerializedName
-import java.io.File
 
 data class TipoFoto (
     @SerializedName("categoria"        ) var categoria        : Int?        = null,
@@ -13,11 +10,7 @@ data class TipoFoto (
 )
 
 data class ArrayFoto(
-    @SerializedName("Uri"              ) var Uri: Bitmap? = null,
+    @SerializedName("Uri"              ) var Uri:                      Uri? = null,
     @SerializedName("TipoFoto"         ) var TipoFoto: TipoFoto?           = null,
-)
-data class DocPhotoRequest(
-    @SerializedName("file"             ) var file: File? = null,
-    @SerializedName("fileType"         ) var fileType: Int? = null,
 )
 

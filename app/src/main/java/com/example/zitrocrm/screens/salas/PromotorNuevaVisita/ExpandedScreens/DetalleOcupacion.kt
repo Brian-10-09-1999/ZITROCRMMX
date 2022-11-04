@@ -196,7 +196,7 @@ fun DetalleOcupacionExpand(
                     textColor = Color.White
                 )
             )
-            if (proveedor_info[1].toInt() != 97&&tipo.value||proveedor_info[1].toInt()==24&&tipo.value==false) {
+            if (proveedor_info[1].toInt() != 97 && tipo.value || proveedor_info[1].toInt() == 24 && tipo.value == false) {
                 OutlinedTextField(
                     enabled = false,
                     value = paqueteria_familia[0],
@@ -208,7 +208,9 @@ fun DetalleOcupacionExpand(
                             alert.value = "Paqueteria_Familia"
                         },
                     label = {
-                        if(tipo.value&&proveedor_info[1].toInt()==24||tipo.value==false&&proveedor_info[1].toInt()==24)Text("Familia")
+                        if (tipo.value && proveedor_info[1].toInt() == 24 || tipo.value == false && proveedor_info[1].toInt() == 24) Text(
+                            "Familia"
+                        )
                         else Text("Paquetería")
                     },
                     trailingIcon = {
@@ -223,7 +225,7 @@ fun DetalleOcupacionExpand(
             Spacer(Modifier.height(10.dp))
             val isValidate by derivedStateOf {
                 proveedor_info[0].isNotBlank()
-                        && proveedor_info[1].toInt()>0
+                        && proveedor_info[1].toInt() > 0
             }
             val isRotated = rememberSaveable { mutableStateOf(false) }
             val rotationAngle by animateFloatAsState(
@@ -233,19 +235,31 @@ fun DetalleOcupacionExpand(
             Button(
                 enabled = isValidate,
                 onClick = {
-                    if(viewModelNV.texthours().isNotBlank()){
-                        if (viewModelNV.listdetalleOcu.isNotEmpty()&&viewModelNV.listdetalleOcu.find { it.proveedor == proveedor_info[0] }?.proveedor.toString() == proveedor_info[0]) {
-                            Toast.makeText(context, "Ya ha sido agregado anteriormente este proveedor: ${proveedor_info[0]}", Toast.LENGTH_SHORT).show()
+                    if (viewModelNV.texthours().isNotBlank()) {
+                        if (viewModelNV.listdetalleOcu.isNotEmpty() && viewModelNV.listdetalleOcu.find { it.proveedor == proveedor_info[0] }?.proveedor.toString() == proveedor_info[0]) {
+                            Toast.makeText(
+                                context,
+                                "Ya ha sido agregado anteriormente este proveedor: ${proveedor_info[0]}",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         } else {
-                            Toast.makeText(context, "Se agrego correctamente: ${proveedor_info[0]}", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                "Se agrego correctamente: ${proveedor_info[0]}",
+                                Toast.LENGTH_SHORT
+                            ).show()
                             viewModelNV.addDetalleOcupacion(
                                 proveedor_info = proveedor_info,
                                 paqueteria_familia = paqueteria_familia,
                                 isRotated = isRotated
                             )
                         }
-                    }else{
-                        Toast.makeText(context, "Selecciona el horario de la visita.", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "Selecciona el horario de la visita.",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 },
                 modifier = Modifier
@@ -488,8 +502,9 @@ fun AlertDetalleOcupacion(
                 onDismissRequest = {},
                 title = null,
                 buttons = {
-                    val title = if(tipo.value&&proveedor_info[1].toInt()==24||tipo.value==false&&proveedor_info[1].toInt()==24) "SELECCIONA LA FAMILIA"
-                    else "SELECCIONA LA PAQUETERIA"
+                    val title =
+                        if (tipo.value && proveedor_info[1].toInt() == 24 || tipo.value == false && proveedor_info[1].toInt() == 24) "SELECCIONA LA FAMILIA"
+                        else "SELECCIONA LA PAQUETERIA"
                     Box(
                         modifier = Modifier
                             .height(60.dp)
@@ -579,16 +594,28 @@ fun DetalleOcupacion(
             }
         ) {
             Box {
-                Text(
+                if(dropProv){
+                    IconButton(
+                        onClick = {
+                            viewModelNV.removeOcupacion(item)
+                        },
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                    ) {
+                        Icon(Icons.Filled.Delete, contentDescription = null)
+                    }
+                }
+                /*Text(
                     text = "N.${index + 1}",
                     modifier = Modifier
                         .padding(vertical = 15.dp, horizontal = 5.dp)
                         .align(Alignment.CenterStart),
                     style = MaterialTheme.typography.subtitle2,
                     fontSize = 14.sp
-                )
+                )*/
+
                 Text(
-                    text = "${item.proveedor}",
+                    text = "N.${index + 1} -  "+"${item.proveedor}",
                     modifier = Modifier
                         .padding(vertical = 15.dp, horizontal = 5.dp)
                         .align(Alignment.Center),
@@ -610,7 +637,7 @@ fun DetalleOcupacion(
         }
         Spacer(Modifier.height(5.dp))
         if (dropProv) {
-            if(item.juego != null){
+            if (item.juego != null) {
                 Text(
                     text = item.juego.toString(),
                     modifier = Modifier
@@ -620,7 +647,7 @@ fun DetalleOcupacion(
                     fontSize = 14.sp
                 )
             }
-            if (item.tipo==2) {
+            if (item.tipo == 2) {
                 OutlinedTextField(
                     value = maquinas1,
                     onValueChange = {
@@ -714,6 +741,13 @@ fun DetalleOcupacion(
                         tint = Color.White
                     )
                 },
+                keyboardActions = KeyboardActions(onDone = {
+                    focusManager.clearFocus()
+                }),
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Next,
+                    keyboardType = KeyboardType.Number
+                )
             )
             Spacer(Modifier.height(10.dp))
             Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
@@ -732,7 +766,7 @@ fun DetalleOcupacion(
                                 modifier = Modifier.align(Alignment.CenterHorizontally)
                             )
                             Spacer(Modifier.height(3.dp))
-                            if (item.tipo==2) {
+                            if (item.tipo == 2) {
                                 OutlinedTextField(
                                     value = ocu1.value,
                                     onValueChange = {
@@ -804,7 +838,7 @@ fun DetalleOcupacion(
                             }
                             OutlinedTextField(
                                 enabled = false,
-                                value = horarios.porcentaje!!,
+                                value = horarios.porcentaje!!+" %",
                                 onValueChange = { },
                                 modifier = Modifier
                                     .width(160.dp),

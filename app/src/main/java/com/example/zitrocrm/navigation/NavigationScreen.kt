@@ -32,7 +32,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.zitrocrm.R
 import com.example.zitrocrm.network.models_dto.Filter.FilterViewModel
-import com.example.zitrocrm.repository.Models.models_nueva_visita.ArrayFoto
 import com.example.zitrocrm.screens.*
 import com.example.zitrocrm.screens.homepage.components.FilterScreen
 import com.example.zitrocrm.screens.login.LoginViewModel
@@ -43,7 +42,6 @@ import com.example.zitrocrm.screens.salas.JuegosNuevosBingo.JuegosNuevosViewMode
 import com.example.zitrocrm.screens.salas.PromotorNewScreenn
 import com.example.zitrocrm.screens.salas.PromotorNuevaVisita.PromotorNuevaVisitaViewModel
 import com.example.zitrocrm.utils.AlertState
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -93,8 +91,8 @@ fun NavigationScreen() {
                 }
             }
             HomeScreen(
-                navController,
-                filterViewModel
+                navController = navController,
+                filterViewModel = filterViewModel
             )
         }
         composable(route = Destination.FilterScreen.route) {
@@ -108,9 +106,9 @@ fun NavigationScreen() {
                 }
             }
             SalasScreen(
-                navController,
-                filterViewModel,
-                viewModelPromotorNuevaVisita
+                navController = navController,
+                viewModelFilter = filterViewModel,
+                viewModelPromotorNuevaVisita = viewModelPromotorNuevaVisita
             )
         }
         composable(route = Destination.PromotorNewScreen.route) {

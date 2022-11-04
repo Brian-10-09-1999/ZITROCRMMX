@@ -7,4 +7,5 @@ data class PostVisitaPromotor (
     @SerializedName("ok"       ) var ok           : Boolean?     = null,
     @SerializedName("msg"      ) var msg          : String?      = null,
     @SerializedName("message"  ) var message      : ID?          = null,
+    @SerializedName("estatus"  ) var estatus      : Int?          = null,
 )
